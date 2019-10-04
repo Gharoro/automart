@@ -8,7 +8,8 @@ const router = express.Router();
 // @access  Private
 router.get('/', passport.authenticate('jwt', { session: false }), (req, res) => res.status(200).json(
   {
-    User: {
+    status: 200,
+    currentUser: {
       id: req.user.id,
       firstName: req.user.firstName,
       lastName: req.user.lastName,

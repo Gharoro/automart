@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable no-else-return */
 /* eslint-disable no-shadow */
 /* eslint-disable consistent-return */
@@ -6,8 +7,9 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const gravatar = require('gravatar');
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 const User = require('../../../models/User');
-const upload = require('../../../config/uploads');
+const upload = require('../../../config/useruploads');
 const keys = require('../../../config/keys');
 
 const router = express.Router();
@@ -20,17 +22,17 @@ router.post('/signup', upload.single('profilePic'), (req, res) => {
   let profilePic = req.file;
   User.findOne({ where: { email } }).then((user) => {
     if (user) {
-      return res.status(400).json({ email_exist: 'Email already exist' });
+      return res.status(400).json({ status: 400, email_exist: 'Email already exist, please login' });
     }
     if (!firstName || !lastName || !username || !phone || !address
       || !email || !password || !confirmPass) {
-      return res.status(400).json({ empty_fields: 'Please fill all fields' });
+      return res.status(400).json({ status: 400, empty_fields: 'Please fill all fields' });
     }
     if (password.length < 8) {
-      return res.status(400).json({ password_len: 'Password must be more than 8 characters' });
+      return res.status(400).json({ status: 400, password_len: 'Password must be more than 8 characters' });
     }
     if (password !== confirmPass) {
-      return res.status(400).json({ password_match: 'Passwords do not match' });
+      return res.status(400).json({ status: 400, password_match: 'Passwords do not match' });
     }
     if (!profilePic) {
       let avatar = gravatar.url(email, {
@@ -53,7 +55,7 @@ router.post('/signup', upload.single('profilePic'), (req, res) => {
           firstName, lastName, username, profilePic, phone, address, email, password,
         }).then((user) => res.status(200).json({
           status: 200,
-          data: user,
+          registeredUser: user,
         })).catch((err) => res.status(400).json({
           status: 400,
           error: err,
@@ -69,37 +71,58 @@ router.post('/signup', upload.single('profilePic'), (req, res) => {
 router.post('/signin', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400).json({ email_pass: 'Please enter a valid email and password' });
+    return res.status(400).json({ status: 400, email_pass: 'Please enter a valid email and password' });
   }
   User.findOne({ where: { email } }).then((user) => {
     if (!user) {
-      return res.status(404).json({ err_email: 'Email does not exist' });
+      return res.status(404).json({ status: 404, err_email: 'Email does not exist' });
     }
     bcrypt.compare(password, user.password).then((isMatch) => {
       if (isMatch) {
         const payload = { id: user.id, lastName: user.lastName, profilePic: user.profilePic };
-        jwt.sign(payload, keys.secretOrKey, { expiresIn: 3600 }, (err, token) => {
-          res.json({
-            success: true,
+        jwt.sign(payload, keys.secretOrKey, { expiresIn: 21600000 }, (err, token) => {
+          res.status(200).json({
+            status: 200,
             token: `Bearer ${token}`,
+            user,
           });
         });
       } else {
-        return res.status(400).json({ err_pass: 'Password incorrect' });
+        return res.status(400).json({ status: 400, err_pass: 'Password incorrect' });
       }
     });
   });
 });
 
-// @route   POST api/auth/signout
-// @desc    Logout a user
-// @access  Private
-router.post('/signout', (req, res) => res.json({ msg: 'user logged out' }));
-
-// @route   DELETE api/auth/delete-account
+// @route   DELETE api/v1/auth/delete_user/user_id
 // @desc    Deletes a user account
 // @access  Private
-router.post('/delete-account', (req, res) => res.json({ msg: 'user account deleted' }));
+router.delete('/delete_user/:user_id', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const user_id = parseInt(req.params.user_id, 10);
+  if (user_id < 1) {
+    res.status(400).json({ status: 400, user_id_err: 'Invalid user Id' });
+  }
+  if (Number.isNaN(user_id)) {
+    res.status(404).json({ status: 404, invalid_user_id: 'user not found, user id must be a positive number' });
+  }
+  User.findByPk(user_id).then((user) => {
+    if (!user) {
+      res.status(404).json({ status: 404, user_err: 'User not found' });
+    }
+    User.destroy({ where: { id: user_id } }).then((rowDeleted) => {
+      if (rowDeleted !== 1) {
+        res.status(400).json({ status: 400, user_delete_err: 'Unable to delete user' });
+      }
+      res.status(200).json(
+        {
+          status: 200,
+          delete_success: 'User deleted successfully',
+          deleted_user: user,
+        },
+      );
+    });
+  }).catch((err) => console.log(err));
+});
 
 
 module.exports = router;

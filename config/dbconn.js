@@ -1,10 +1,10 @@
 /* eslint-disable comma-dangle */
 const Sequelize = require('sequelize');
 
-const db = new Sequelize('automart', 'postgres', 'dbPassword', {
+const db = new Sequelize('automart', 'postgres', '', {
   host: 'localhost',
   dialect: 'postgres',
-  logging: false,
+  logging: true,
   pool: {
     max: 5,
     min: 0,

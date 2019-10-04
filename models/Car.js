@@ -2,58 +2,63 @@ const Sequelize = require('sequelize');
 
 const db = require('../config/dbconn');
 
-const User = db.define('user', {
+const Car = db.define('car', {
   id: {
     type: Sequelize.INTEGER,
     primaryKey: true,
     unique: true,
     autoIncrement: true,
   },
-  firstName: {
-    type: Sequelize.STRING,
+  owner: {
+    type: Sequelize.INTEGER,
     AllowNull: false,
-  },
-  lastName: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-  },
-  username: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-  },
-  profilePic: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-  },
-  phone: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-  },
-  address: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-  },
-  email: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-    unique: true,
-  },
-  password: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-    validate: {
-      len: { args: 8 },
+    references: {
+      model: 'users',
+      key: 'id',
     },
   },
-  is_admin: {
-    type: Sequelize.BOOLEAN,
-    defaultValue: false,
+  name: {
+    type: Sequelize.STRING,
+    AllowNull: false,
+  },
+  description: {
+    type: Sequelize.STRING,
+    AllowNull: false,
+  },
+  state: {
+    type: Sequelize.STRING,
+    AllowNull: false,
+  },
+  status: {
+    type: Sequelize.STRING,
+    AllowNull: false,
+    defaultValue: 'available',
+  },
+  price: {
+    type: Sequelize.FLOAT,
+    AllowNull: false,
+  },
+  manufacturer: {
+    type: Sequelize.STRING,
+    AllowNull: false,
+  },
+  model: {
+    type: Sequelize.STRING,
+    AllowNull: false,
+  },
+  body_type: {
+    type: Sequelize.STRING,
+    AllowNull: false,
+  },
+  image: {
+    type: Sequelize.STRING,
+    AllowNull: false,
   },
 });
 
-// Create table with user model
-// User.sync()
-//   .then(() => console.log('User table created'))
+// Create table with car model
+// Car.sync({ force: true })
+//   .then(() => console.log('Car table created'))
 //   .catch((err) => console.log(err));
 
-module.exports = User;
+module.exports = Car;
