@@ -100,18 +100,18 @@ router.post('/signin', (req, res) => {
 router.delete('/delete_user/:user_id', passport.authenticate('jwt', { session: false }), (req, res) => {
   const user_id = parseInt(req.params.user_id, 10);
   if (user_id < 1) {
-    res.status(400).json({ status: 400, user_id_err: 'Invalid user Id' });
+    return res.status(400).json({ status: 400, user_id_err: 'Invalid user Id' });
   }
   if (Number.isNaN(user_id)) {
-    res.status(404).json({ status: 404, invalid_user_id: 'user not found, user id must be a positive number' });
+    return res.status(404).json({ status: 404, invalid_user_id: 'user not found, user id must be a positive number' });
   }
   User.findByPk(user_id).then((user) => {
     if (!user) {
-      res.status(404).json({ status: 404, user_err: 'User not found' });
+      return res.status(404).json({ status: 404, user_err: 'User not found' });
     }
     User.destroy({ where: { id: user_id } }).then((rowDeleted) => {
       if (rowDeleted !== 1) {
-        res.status(400).json({ status: 400, user_delete_err: 'Unable to delete user' });
+        return res.status(400).json({ status: 400, user_delete_err: 'Unable to delete user' });
       }
       res.status(200).json(
         {

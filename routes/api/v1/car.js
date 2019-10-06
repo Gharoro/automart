@@ -12,7 +12,7 @@ const upload = require('../../../config/caruploads');
 
 const router = express.Router();
 
-// @route   POST api/v1/car/
+// @route   POST /car
 // @desc    Create a car sale ad
 // @access  Private
 router.post('/', upload.single('image'), passport.authenticate('jwt', { session: false }), (req, res) => {
@@ -27,40 +27,38 @@ router.post('/', upload.single('image'), passport.authenticate('jwt', { session:
     return res.status(400).json({ status: 400, empty_car_fields: 'Please fill all fields' });
   }
   if (!image) {
-    return res.status(400).json({ status: 400, car_img: 'Please upload an image for your car' });
+    return res.status(400).json({ status: 400, no_img: 'Please upload an image for your car' });
   }
   if (image.size > 5000000) {
-    return res.status(400).json({ status: 400, car_size_error: 'Please upload a picture less than 5mb' });
+    return res.status(400).json({ status: 400, pic_size_error: 'Please upload a picture less than 5mb' });
   }
   image = image.path;
   Car.create({
     owner, name, description, state, status, price, manufacturer, model, body_type, image,
-  }).then((car) => {
-    res.status(200).json({
-      status: 200,
-      added_car: car,
-    });
-  }).catch((err) => res.status(400).json({
+  }).then((car) => res.status(200).json({
+    status: 200,
+    added_car: car,
+  })).catch(() => res.status(400).json({
     status: 400,
-    error: err,
+    error: 'Unable to add car.',
   }));
 });
 
-// @route   PATCH api/v1/car/car_id/status
+// @route   PATCH /:car_id/status
 // @desc    Mark a posted car ad as sold(unavailable)
 // @access  Private
 router.patch('/:id/status', passport.authenticate('jwt', { session: false }), (req, res) => {
   const carId = parseInt(req.params.id, 10);
   const current_user_id = req.user.id;
   if (carId < 1) {
-    res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
+    return res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
   }
   if (Number.isNaN(carId)) {
-    res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
+    return res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a number.' });
   }
   Car.findByPk(carId).then((car) => {
     if (!car) {
-      res.status(404).json({ status: 404, no_car: 'Car does not exist' });
+      return res.status(404).json({ status: 404, no_car: 'Car does not exist' });
     }
     if (current_user_id === car.owner) {
       Car.update(
@@ -68,7 +66,7 @@ router.patch('/:id/status', passport.authenticate('jwt', { session: false }), (r
         { where: { id: carId }, returning: true },
       ).then((newCar) => {
         if (newCar[0] === 0) {
-          res.status(400).json({ status: 400, update_err: 'Unable to update car status.' });
+          return res.status(400).json({ status: 400, update_err: 'Unable to update car status.' });
         }
         const { status } = car;
         res.status(200).json({ status: 200, updated_car_status: status, newCar });
@@ -79,7 +77,7 @@ router.patch('/:id/status', passport.authenticate('jwt', { session: false }), (r
   }).catch((err) => console.log(err));
 });
 
-// @route   PATCH api/v1/car/car_id/price
+// @route   PATCH /:car_id/price
 // @desc    Update the price of a car
 // @access  Private
 router.patch('/:id/price', passport.authenticate('jwt', { session: false }), (req, res) => {
@@ -87,14 +85,14 @@ router.patch('/:id/price', passport.authenticate('jwt', { session: false }), (re
   const current_user_id = req.user.id;
   let { new_price } = req.body;
   if (carId < 1) {
-    res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
+    return res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
   }
   if (Number.isNaN(carId)) {
-    res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
+    return res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
   }
   Car.findByPk(carId).then((car) => {
     if (!car) {
-      res.status(404).json({ status: 404, no_car: 'Car does not exist' });
+      return res.status(404).json({ status: 404, no_car: 'Car does not exist' });
     }
     if (current_user_id === car.owner) {
       Car.update(
@@ -102,7 +100,7 @@ router.patch('/:id/price', passport.authenticate('jwt', { session: false }), (re
         { where: { id: carId }, returning: true },
       ).then((newCar) => {
         if (newCar[0] === 0) {
-          res.status(400).json({ status: 400, update_err: 'Unable to update car price.' });
+          return res.status(400).json({ status: 400, update_err: 'Unable to update car price.' });
         }
         const { price } = car;
         res.status(200).json({ status: 200, updated_car_price: price, newCar });
@@ -113,33 +111,33 @@ router.patch('/:id/price', passport.authenticate('jwt', { session: false }), (re
   }).catch((err) => console.log(err));
 });
 
-// @route   GET api/v1/car/car_id
+// @route   GET /:car_id
 // @desc    View a specific car
 // @access  Public
 router.get('/:car_id', (req, res) => {
   const car_id = parseInt(req.params.car_id, 10);
   if (car_id < 1) {
-    res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
+    return res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
   }
   if (Number.isNaN(car_id)) {
-    res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
+    return res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
   }
   Car.findByPk(car_id).then((car) => {
     if (!car) {
-      res.status(404).json({ status: 404, car_err: 'Car not found' });
+      return res.status(404).json({ status: 404, car_err: 'Car not found' });
     }
     res.status(200).json({ status: 200, car });
   }).catch((err) => console.log(err));
 });
 
-// @route   GET api/v1/car/status/available
+// @route   GET /status/available
 // @desc    View all unsold cars
 // @access  Public
 router.get('/status/available', (req, res) => {
   Car.findAll({ where: { status: 'available' } })
     .then((cars) => {
       if (cars.length < 1) {
-        res.status(404).json({ error: 'No available cars found' });
+        return res.status(404).json({ error: 'No available cars found' });
       }
       res.status(200).json({
         status: 200,
@@ -148,14 +146,14 @@ router.get('/status/available', (req, res) => {
     }).catch((err) => console.log(err));
 });
 
-// @route   GET api/v1/car/state/new
+// @route   GET /state/new
 // @desc    View all new unsold cars
 // @access  Public
 router.get('/state/new', (req, res) => {
   Car.findAll({ where: { state: 'new', status: 'available' } })
     .then((cars) => {
       if (cars.length < 1) {
-        res.status(404).json({ error: 'No new cars found' });
+        return res.status(404).json({ error: 'No new cars found' });
       }
       res.status(200).json({
         status: 200,
@@ -164,14 +162,14 @@ router.get('/state/new', (req, res) => {
     }).catch((err) => console.log(err));
 });
 
-// @route   GET api/v1/car/state/used
+// @route   GET /state/used
 // @desc    View all used unsold cars
 // @access  Public
 router.get('/state/used', (req, res) => {
   Car.findAll({ where: { state: 'used', status: 'available' } })
     .then((cars) => {
       if (cars.length < 1) {
-        res.status(404).json({ error: 'No used cars found' });
+        return res.status(404).json({ error: 'No used cars found' });
       }
       res.status(200).json({
         status: 200,
@@ -180,7 +178,7 @@ router.get('/state/used', (req, res) => {
     }).catch((err) => console.log(err));
 });
 
-// @route   GET api/v1/car/search/q
+// @route   GET /search/q
 // @desc    Search cars
 // @access  Public
 router.get('/search/q', (req, res) => {
@@ -208,7 +206,7 @@ router.get('/search/q', (req, res) => {
     },
   }).then((cars) => {
     if (cars.length < 1) {
-      res.status(404).json({ msg: 'No cars found' });
+      return res.status(404).json({ msg: 'No cars found' });
     }
     res.status(200).json({
       status: 200,
@@ -217,26 +215,26 @@ router.get('/search/q', (req, res) => {
   }).catch((err) => console.log(err));
 });
 
-// @route   DELETE api/v1/car/car_id
+// @route   DELETE /:car_id
 // @desc    Delete a specific car
 // @access  Private
 router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req, res) => {
   const car_id = parseInt(req.params.car_id, 10);
   const current_user_id = req.user.id;
   if (car_id < 1) {
-    res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
+    return res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
   }
   if (Number.isNaN(car_id)) {
-    res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
+    return res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
   }
   Car.findByPk(car_id).then((car) => {
     if (!car) {
-      res.status(404).json({ status: 404, car_err: 'Car not found' });
+      return res.status(404).json({ status: 404, car_err: 'Car not found' });
     }
     if (current_user_id === car.owner) {
       Car.destroy({ where: { id: car_id } }).then((rowDeleted) => {
         if (rowDeleted !== 1) {
-          res.status(400).json({ status: 400, delete_err: 'Unable to delete car' });
+          return res.status(400).json({ status: 400, delete_err: 'Unable to delete car' });
         }
         res.status(200).json(
           {
@@ -252,36 +250,31 @@ router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req
   }).catch((err) => console.log(err));
 });
 
-// // @route   GET api/v1/car
+// // @route   GET /car
 // // @desc    View all posted car ads
 // // @access  Public
 router.get('/', (req, res) => {
   Car.findAll().then((cars) => {
     if (cars.length < 1) {
-      res.status(404).json(
-        {
-          status: 404,
-          car_msg: 'No cars found at the moment',
-        },
-      );
+      return res.status(404).json({ status: 404, failure: 'No cars found' });
     }
     res.status(200).json({
       status: 200,
-      all_cars: cars,
+      cars,
     });
   }).catch((err) => console.log(err));
 });
 
-// @route   GET api/v1/car/user/user_id
-// @desc    View all posted car ads by a user
+// @route   GET /seller/:seller_id
+// @desc    View all posted car ads by a seller
 // @access  Public
-router.get('/user/:user_id', (req, res) => {
-  const owner_id = parseInt(req.params.user_id, 10);
+router.get('/seller/:seller_id', (req, res) => {
+  const owner_id = parseInt(req.params.seller_id, 10);
   if (owner_id < 1) {
-    res.status(400).json({ status: 400, user_id_err: 'Invalid user Id' });
+    return res.status(400).json({ status: 400, user_id_err: 'Invalid user Id' });
   }
   if (Number.isNaN(owner_id)) {
-    res.status(404).json({ status: 404, invalid_user_id: 'User does not exist' });
+    return res.status(404).json({ status: 404, invalid_user_id: 'User does not exist' });
   }
   Car.findAll({ where: { owner: owner_id } }).then((cars) => {
     User.findByPk(owner_id).then((user) => {
@@ -294,8 +287,26 @@ router.get('/user/:user_id', (req, res) => {
           },
         );
       }
-      return res.status(404).json({ status: 404, no_user_ads: 'No ads found for this user' });
+      res.status(404).json({ status: 404, no_seller_ads: 'No ads found for this user' });
     });
+  }).catch((err) => console.log(err));
+});
+
+// @route   GET /user/user_id
+// @desc    View all posted car ads by a user
+// @access  Private
+router.get('/user/my_cars', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const current_user_id = req.user.id;
+  Car.findAll({ where: { owner: current_user_id } }).then((cars) => {
+    if (cars.length > 0) {
+      return res.status(200).json(
+        {
+          status: 200,
+          my_cars: cars,
+        },
+      );
+    }
+    res.status(404).json({ status: 404, no_user_ads: 'You do not have any listed cars' });
   }).catch((err) => console.log(err));
 });
 
