@@ -9,7 +9,7 @@ const app = express();
 require('dotenv').config();
 
 // Database connection
-require('./config/herokudb');
+require('./config/dbconn');
 
 // Cors middleware
 app.use(cors());
