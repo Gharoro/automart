@@ -4,7 +4,7 @@ const Sequelize = require('sequelize');
 const db = new Sequelize('automart', 'postgres', 'jesus4ever', {
   host: 'localhost',
   dialect: 'postgres',
-  logging: true,
+  logging: false,
   pool: {
     max: 5,
     min: 0,

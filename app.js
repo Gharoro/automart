@@ -3,9 +3,10 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const cors = require('cors');
 
-require('dotenv').config();
-
 const app = express();
+
+// Environment variable middleware
+require('dotenv').config();
 
 // Database connection
 require('./config/dbconn');
@@ -33,6 +34,9 @@ app.use('/api/v1/profile', profile);
 app.use('/api/v1/car', car);
 app.use('/api/v1/order', order);
 
+app.get('/', (req, res) => {
+  res.send('This is the Automart API');
+});
 
-const port = 7000;
+const port = process.env.PORT || 7000;
 app.listen(port, () => console.log(`Server runing on port ${port}`));
