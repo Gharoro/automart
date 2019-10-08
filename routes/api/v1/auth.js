@@ -9,7 +9,7 @@ const gravatar = require('gravatar');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const User = require('../../../models/User');
-const upload = require('../../../config/useruploads');
+const parser = require('../../../config/userUploadConfig');
 const keys = require('../../../config/keys');
 
 const router = express.Router();
@@ -17,7 +17,7 @@ const router = express.Router();
 // @route   POST api/v1/auth/signup
 // @desc    Create user account
 // @access  Public
-router.post('/signup', upload.single('profilePic'), (req, res) => {
+router.post('/signup', parser.single('profilePic'), (req, res) => {
   let { firstName, lastName, username, phone, address, email, password, confirmPass } = req.body;
   let profilePic = req.file;
   User.findOne({ where: { email } }).then((user) => {
@@ -42,7 +42,7 @@ router.post('/signup', upload.single('profilePic'), (req, res) => {
       });
       profilePic = avatar;
     } else {
-      profilePic = profilePic.path;
+      profilePic = profilePic.url;
     }
     if (profilePic.size > 2000000) {
       return res.status(400).json({ status: 400, picSizeError: 'Please upload a picture less than 2mb' });

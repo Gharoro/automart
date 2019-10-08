@@ -8,14 +8,14 @@ const sequelize = require('sequelize');
 const { Op } = sequelize;
 const Car = require('../../../models/Car');
 const User = require('../../../models/User');
-const upload = require('../../../config/caruploads');
+const parser = require('../../../config/carsUploadConfig');
 
 const router = express.Router();
 
 // @route   POST /car
 // @desc    Create a car sale ad
 // @access  Private
-router.post('/', upload.single('image'), passport.authenticate('jwt', { session: false }), (req, res) => {
+router.post('/', parser.single('image'), passport.authenticate('jwt', { session: false }), (req, res) => {
   let { name, description, state, status, price, manufacturer, model, body_type } = req.body;
   state = state.toLowerCase();
   status = status.toLowerCase();
@@ -32,16 +32,13 @@ router.post('/', upload.single('image'), passport.authenticate('jwt', { session:
   if (image.size > 5000000) {
     return res.status(400).json({ status: 400, pic_size_error: 'Please upload a picture less than 5mb' });
   }
-  image = image.path;
+  image = image.url;
   Car.create({
     owner, name, description, state, status, price, manufacturer, model, body_type, image,
   }).then((car) => res.status(200).json({
     status: 200,
     added_car: car,
-  })).catch(() => res.status(400).json({
-    status: 400,
-    error: 'Unable to add car.',
-  }));
+  })).catch((err) => console.log(err));
 });
 
 // @route   PATCH /:car_id/status
@@ -206,11 +203,11 @@ router.get('/search/q', (req, res) => {
     },
   }).then((cars) => {
     if (cars.length < 1) {
-      return res.status(404).json({ msg: 'No cars found' });
+      return res.status(404).json({ no_result: 'No cars found' });
     }
     res.status(200).json({
       status: 200,
-      found_cars: cars,
+      result: cars,
     });
   }).catch((err) => console.log(err));
 });
@@ -254,14 +251,15 @@ router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req
 // // @desc    View all posted car ads
 // // @access  Public
 router.get('/', (req, res) => {
-  Car.findAll().then((cars) => {
-    if (cars.length < 1) {
-      return res.status(404).json({ status: 404, failure: 'No cars found' });
+  Car.findAll({ limit: 6, order: [['createdAt', 'DESC']] }).then((cars) => {
+    if (cars.length > 0) {
+      res.status(200).json({
+        status: 200,
+        cars,
+      });
+    } else {
+      return res.status(200).json({ status: 200, info: 'There are currently no ads.' });
     }
-    res.status(200).json({
-      status: 200,
-      cars,
-    });
   }).catch((err) => console.log(err));
 });
 

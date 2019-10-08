@@ -37,7 +37,7 @@ const Order = db.define('order', {
 });
 
 // Create table with car model
-// Order.sync()
+// Order.sync({ force: true })
 //   .then(() => console.log('Order table created'))
 //   .catch((err) => console.log(err));
 

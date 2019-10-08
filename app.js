@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const passport = require('passport');
 const cors = require('cors');
 
+require('dotenv').config();
+
 const app = express();
 
 // Database connection
@@ -32,5 +34,5 @@ app.use('/api/v1/car', car);
 app.use('/api/v1/order', order);
 
 
-const port = process.env.PORT || 7000;
+const port = 7000;
 app.listen(port, () => console.log(`Server runing on port ${port}`));
