@@ -1,7 +1,7 @@
 /* eslint-disable comma-dangle */
 const Sequelize = require('sequelize');
 
-const db = new Sequelize('automart', 'postgres', 'jesus4ever', {
+const db = new Sequelize('automart', 'postgres', '', {
   host: 'localhost',
   dialect: 'postgres',
   logging: false,
