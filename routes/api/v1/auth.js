@@ -29,10 +29,10 @@ router.post('/signup', parser.single('profilePic'), (req, res) => {
       return res.status(400).json({ status: 400, empty_fields: 'Please fill all fields' });
     }
     if (password.length < 8) {
-      return res.status(400).json({ status: 400, password_len: 'Password must be more than 8 characters' });
+      return res.status(400).json({ status: 400, password_length: 'Password must be more than 8 characters' });
     }
     if (password !== confirmPass) {
-      return res.status(400).json({ status: 400, password_match: 'Passwords do not match' });
+      return res.status(400).json({ status: 400, password_mis_match: 'Passwords do not match' });
     }
     if (!profilePic) {
       let avatar = gravatar.url(email, {
@@ -45,7 +45,7 @@ router.post('/signup', parser.single('profilePic'), (req, res) => {
       profilePic = profilePic.url;
     }
     if (profilePic.size > 2000000) {
-      return res.status(400).json({ status: 400, picSizeError: 'Please upload a picture less than 2mb' });
+      return res.status(400).json({ status: 400, picture_size: 'Please upload a picture less than 2mb' });
     }
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(password, salt, (err, hash) => {
@@ -56,9 +56,9 @@ router.post('/signup', parser.single('profilePic'), (req, res) => {
         }).then((user) => res.status(200).json({
           status: 200,
           registeredUser: user,
-        })).catch((err) => res.status(400).json({
+        })).catch(() => res.status(400).json({
           status: 400,
-          error: err,
+          error: 'User registration failed',
         }));
       });
     });
@@ -88,7 +88,7 @@ router.post('/signin', (req, res) => {
           });
         });
       } else {
-        return res.status(400).json({ status: 400, err_pass: 'Password incorrect' });
+        return res.status(400).json({ status: 400, password_error: 'Password incorrect!' });
       }
     });
   });
@@ -107,21 +107,20 @@ router.delete('/delete_user/:user_id', passport.authenticate('jwt', { session: f
   }
   User.findByPk(user_id).then((user) => {
     if (!user) {
-      return res.status(404).json({ status: 404, user_err: 'User not found' });
+      return res.status(404).json({ status: 404, no_user: 'User not found' });
     }
     User.destroy({ where: { id: user_id } }).then((rowDeleted) => {
       if (rowDeleted !== 1) {
-        return res.status(400).json({ status: 400, user_delete_err: 'Unable to delete user' });
+        return res.status(400).json({ status: 400, error: 'Unable to delete user' });
       }
       res.status(200).json(
         {
           status: 200,
           delete_success: 'User deleted successfully',
-          deleted_user: user,
         },
       );
     });
-  }).catch((err) => console.log(err));
+  }).catch(() => res.status(400).json({ error: 'An error occured!' }));
 });
 
 

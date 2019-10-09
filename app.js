@@ -9,8 +9,11 @@ const app = express();
 require('dotenv').config();
 
 // Database connection
-require('./config/herokudb');
-
+if (process.env.NODE_ENV === 'development') {
+  require('./config/dbconn');
+} else {
+  require('./config/remotedb');
+}
 // Cors middleware
 app.use(cors());
 
@@ -38,5 +41,5 @@ app.get('/', (req, res) => {
   res.send('This is the Automart API');
 });
 
-const port = process.env.PORT || 4444;
+const port = process.env.PORT || 7000;
 app.listen(port, () => console.log(`Server runing on port ${port}`));

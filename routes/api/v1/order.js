@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 /* eslint-disable object-curly-newline */
 /* eslint-disable consistent-return */
 /* eslint-disable camelcase */
@@ -13,10 +14,14 @@ const router = express.Router();
 // @access  Private
 router.post('/', passport.authenticate('jwt', { session: false }), (req, res) => {
   let { amount, status } = req.body;
+  amount = parseFloat(amount);
   const buyer = req.user.id;
   const { car_id } = req.query;
   if (!amount) {
-    return res.status(400).json({ status: 400, amount_error: 'Please enter a valid amount' });
+    return res.status(400).json({ status: 400, no_amount: 'Please enter offer amount' });
+  }
+  if (isNaN(amount)) {
+    return res.status(400).json({ status: 400, invalid_amount: 'Please enter a valid amount' });
   }
   Order.create({ buyer, car_id, amount, status }).then((order) => {
     if (order) {
@@ -27,8 +32,8 @@ router.post('/', passport.authenticate('jwt', { session: false }), (req, res) =>
         },
       );
     }
-    res.status(400).json({ status: 400, failure: 'Your could not be placed' });
-  }).catch((err) => console.log(err));
+    res.status(400).json({ status: 400, failed_order: 'Your could not be placed' });
+  });
 });
 
 // @route   POST /:order_id/status/accepted
@@ -51,11 +56,11 @@ router.patch('/:order_id/status', passport.authenticate('jwt', { session: false 
       { where: { id: order_id }, returning: true },
     ).then((newOrder) => {
       if (newOrder[0] === 0) {
-        return res.status(400).json({ status: 400, update_err: 'Unable to update Order status.' });
+        return res.status(400).json({ status: 400, update_error: 'Unable to update Order status.' });
       }
-      res.status(200).json({ status: 200, updated_order_status: newOrder });
+      res.status(200).json({ status: 200, updated_order: newOrder });
     });
-  }).catch((err) => console.log(err));
+  });
 });
 
 // @route   PATCH /:order_id/price
@@ -89,7 +94,7 @@ router.patch('/:order_id/price', passport.authenticate('jwt', { session: false }
         res.status(200).json({ status: 200, updated_order: newOrder });
       });
     }
-  }).catch((err) => console.log(err));
+  });
 });
 
 // @route   GET /user
@@ -102,12 +107,12 @@ router.get('/user', passport.authenticate('jwt', { session: false }), (req, res)
       return res.status(200).json(
         {
           status: 200,
-          my_orders: orders,
+          user_orders: orders,
         },
       );
     }
     res.status(404).json({ status: 404, no_user_orders: 'You do not have any orders' });
-  }).catch((err) => console.log(err));
+  });
 });
 
 // @route   GET /car/:car_id

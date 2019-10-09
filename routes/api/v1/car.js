@@ -121,7 +121,7 @@ router.get('/:car_id', (req, res) => {
   }
   Car.findByPk(car_id).then((car) => {
     if (!car) {
-      return res.status(404).json({ status: 404, car_err: 'Car not found' });
+      return res.status(404).json({ status: 404, no_car: 'Car not found' });
     }
     res.status(200).json({ status: 200, car });
   }).catch((err) => console.log(err));
@@ -226,12 +226,12 @@ router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req
   }
   Car.findByPk(car_id).then((car) => {
     if (!car) {
-      return res.status(404).json({ status: 404, car_err: 'Car not found' });
+      return res.status(404).json({ status: 404, no_car: 'Car not found' });
     }
     if (current_user_id === car.owner) {
       Car.destroy({ where: { id: car_id } }).then((rowDeleted) => {
         if (rowDeleted !== 1) {
-          return res.status(400).json({ status: 400, delete_err: 'Unable to delete car' });
+          return res.status(400).json({ status: 400, delete_error: 'Unable to delete car' });
         }
         res.status(200).json(
           {
@@ -258,7 +258,7 @@ router.get('/', (req, res) => {
         cars,
       });
     } else {
-      return res.status(200).json({ status: 200, info: 'There are currently no ads.' });
+      return res.status(404).json({ status: 404, info: 'There are currently no ads.' });
     }
   }).catch((err) => console.log(err));
 });
