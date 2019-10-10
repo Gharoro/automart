@@ -34,7 +34,7 @@ app.use('/api/v1/profile', profile);
 app.use('/api/v1/car', car);
 app.use('/api/v1/order', order);
 
-app.get('/api/v1/car', (req, res) => {
+app.get('/', (req, res) => {
   res.send('This is the Automart API');
 });
 
