@@ -247,6 +247,13 @@ router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req
   }).catch((err) => console.log(err));
 });
 
+// // @route   GET /test
+// // @desc    View all posted car ads
+// // @access  Public
+router.get('/test', (req, res) => {
+  res.send('Test route');
+});
+
 // // @route   GET /car
 // // @desc    View all posted car ads
 // // @access  Public
