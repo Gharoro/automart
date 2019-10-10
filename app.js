@@ -9,11 +9,8 @@ const app = express();
 require('dotenv').config();
 
 // Database connection
-if (process.env.NODE_ENV === 'development') {
-  require('./config/dbconn');
-} else {
-  require('./config/remotedb');
-}
+require('./config/dbconn');
+
 // Cors middleware
 app.use(cors());
 
@@ -40,6 +37,7 @@ app.use('/api/v1/order', order);
 app.get('/', (req, res) => {
   res.send('This is the Automart API');
 });
+
 
 const port = process.env.PORT || 7000;
 app.listen(port, () => console.log(`Server runing on port ${port}`));
