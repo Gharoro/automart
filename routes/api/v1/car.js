@@ -250,7 +250,7 @@ router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req
 // // @route   GET /test
 // // @desc    View all posted car ads
 // // @access  Public
-router.get('/test', (req, res) => {
+router.get('/test/new', (req, res) => {
   res.send('Test route');
 });
 
