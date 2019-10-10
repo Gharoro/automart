@@ -5,14 +5,14 @@ const cors = require('cors');
 
 const app = express();
 
+// Cors middleware
+app.use(cors());
+
 // Environment variable middleware
 require('dotenv').config();
 
 // Database connection
 require('./config/dbconn');
-
-// Cors middleware
-app.use(cors());
 
 // Body-parser middleware
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -34,7 +34,7 @@ app.use('/api/v1/profile', profile);
 app.use('/api/v1/car', car);
 app.use('/api/v1/order', order);
 
-app.get('/', (req, res) => {
+app.get('/api/v1/car', (req, res) => {
   res.send('This is the Automart API');
 });
 
