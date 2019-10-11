@@ -56,9 +56,4 @@ const Car = db.define('car', {
   },
 });
 
-// Create table with car model
-// Car.sync({ force: true })
-//   .then(() => console.log('Car table created'))
-//   .catch((err) => console.log(err));
-
 module.exports = Car;

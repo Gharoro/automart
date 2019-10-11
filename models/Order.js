@@ -36,9 +36,4 @@ const Order = db.define('order', {
   },
 });
 
-// Create table with car model
-// Order.sync({ force: true })
-//   .then(() => console.log('Order table created'))
-//   .catch((err) => console.log(err));
-
 module.exports = Order;
