@@ -1,39 +1,30 @@
-const Sequelize = require('sequelize');
+/* eslint-disable eol-last */
+/* eslint-disable comma-dangle */
+const mongoose = require('mongoose');
 
-const db = require('../config/dbconn');
-
-const Order = db.define('order', {
-  id: {
-    type: Sequelize.INTEGER,
-    primaryKey: true,
-    unique: true,
-    autoIncrement: true,
+const orderSchema = new mongoose.Schema({
+  buyer_id: {
+    type: String,
+    required: true
   },
-  buyer: {
-    type: Sequelize.INTEGER,
-    AllowNull: false,
-    references: {
-      model: 'users',
-      key: 'id',
-    },
+  buyer_email: {
+    type: String,
+    required: true
   },
   car_id: {
-    type: Sequelize.INTEGER,
-    AllowNull: false,
-    references: {
-      model: 'cars',
-      key: 'id',
-    },
+    type: String,
+    required: true
   },
   amount: {
-    type: Sequelize.FLOAT,
-    AllowNull: false,
+    type: Number,
+    required: true
   },
   status: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-    defaultValue: 'pending',
-  },
+    type: String,
+    required: true,
+    default: 'pending'
+  }
 });
 
+const Order = mongoose.model('Order', orderSchema);
 module.exports = Order;

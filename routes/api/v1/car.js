@@ -3,9 +3,9 @@
 /* eslint-disable camelcase */
 const express = require('express');
 const passport = require('passport');
-const sequelize = require('sequelize');
+const mongoose = require('mongoose');
+const cloudinary = require('cloudinary');
 
-const { Op } = sequelize;
 const Car = require('../../../models/Car');
 const User = require('../../../models/User');
 const parser = require('../../../config/carsUploadConfig');
@@ -22,7 +22,7 @@ router.post('/', parser.single('image'), passport.authenticate('jwt', { session:
   manufacturer = manufacturer.toLowerCase();
   body_type = body_type.toLowerCase();
   let image = req.file;
-  const owner = req.user.id;
+  const owner_id = req.user.id;
   if (!name || !description || !state || !price || !manufacturer || !model || !body_type) {
     return res.status(400).json({ status: 400, empty_car_fields: 'Please fill all fields' });
   }
@@ -32,147 +32,139 @@ router.post('/', parser.single('image'), passport.authenticate('jwt', { session:
   if (image.size > 5000000) {
     return res.status(400).json({ status: 400, pic_size_error: 'Please upload a picture less than 5mb' });
   }
-  image = image.url;
-  Car.create({
-    owner, name, description, state, status, price, manufacturer, model, body_type, image,
-  }).then((car) => res.status(200).json({
+  image = {
+    public_ID: image.public_id,
+    public_url: image.url,
+  };
+  const newCar = new Car({
+    owner_id, name, description, state, status, price, manufacturer, model, body_type, image,
+  });
+  newCar.save().then((car) => res.status(200).json({
     status: 200,
-    added_car: car,
-  })).catch((err) => console.log(err));
+    new_car: car,
+  })).catch((err) => res.status(400).json({
+    status: 400,
+    error: err,
+  }));
 });
 
 // @route   PATCH /:car_id/status
 // @desc    Mark a posted car ad as sold(unavailable)
 // @access  Private
 router.patch('/:id/status', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const carId = parseInt(req.params.id, 10);
+  const car_id = req.params.id;
   const current_user_id = req.user.id;
-  if (carId < 1) {
-    return res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
+  if (!mongoose.Types.ObjectId.isValid(car_id)) {
+    return res.status(404).json({ status: 404, error: 'Car Id does not exist' });
   }
-  if (Number.isNaN(carId)) {
-    return res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a number.' });
-  }
-  Car.findByPk(carId).then((car) => {
+  Car.findById(car_id).then((car) => {
     if (!car) {
-      return res.status(404).json({ status: 404, no_car: 'Car does not exist' });
+      return res.status(404).json({ status: 404, error: 'Car not found' });
     }
-    if (current_user_id === car.owner) {
-      Car.update(
-        { status: 'unavailable' },
-        { where: { id: carId }, returning: true },
-      ).then((newCar) => {
-        if (newCar[0] === 0) {
-          return res.status(400).json({ status: 400, update_err: 'Unable to update car status.' });
-        }
-        const { status } = car;
-        res.status(200).json({ status: 200, updated_car_status: status, newCar });
-      });
+    if (current_user_id !== car.owner_id) {
+      res.status(401).json({ status: 401, error: 'Not Authorised' });
     } else {
-      res.status(401).json({ status: 401, error: 'You are not allowed to edit this car' });
+      Car.update(
+        { _id: car_id },
+        { $set: { status: 'unavailable' } },
+      ).then(() => res.status(200).json({
+        status: 200,
+        message: 'Car updated successfuly',
+      })).catch((err) => res.status(400).json({ status: 400, error: err }));
     }
-  }).catch((err) => console.log(err));
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   PATCH /:car_id/price
 // @desc    Update the price of a car
 // @access  Private
 router.patch('/:id/price', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const carId = parseInt(req.params.id, 10);
+  const car_id = req.params.id;
   const current_user_id = req.user.id;
   let { new_price } = req.body;
-  if (carId < 1) {
-    return res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
+  new_price = parseFloat(new_price);
+  if (!mongoose.Types.ObjectId.isValid(car_id)) {
+    return res.status(404).json({ status: 404, error: 'Car Id does not exist' });
   }
-  if (Number.isNaN(carId)) {
-    return res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
-  }
-  Car.findByPk(carId).then((car) => {
+  Car.findById(car_id).then((car) => {
     if (!car) {
-      return res.status(404).json({ status: 404, no_car: 'Car does not exist' });
+      return res.status(404).json({ status: 404, error: 'Car not found' });
     }
-    if (current_user_id === car.owner) {
-      Car.update(
-        { price: new_price },
-        { where: { id: carId }, returning: true },
-      ).then((newCar) => {
-        if (newCar[0] === 0) {
-          return res.status(400).json({ status: 400, update_err: 'Unable to update car price.' });
-        }
-        const { price } = car;
-        res.status(200).json({ status: 200, updated_car_price: price, newCar });
-      });
-    } else {
-      res.status(401).json({ status: 401, error: 'You are not allowed to edit this car' });
+    if (current_user_id !== car.owner_id) {
+      res.status(401).json({ status: 401, error: 'Not Authorised' });
     }
-  }).catch((err) => console.log(err));
+    Car.updateOne(
+      { _id: car_id },
+      { $set: { price: new_price } },
+    ).then(() => res.status(200).json({
+      status: 200,
+      message: 'Car price updated successfuly',
+    })).catch((err) => res.status(400).json({ status: 400, error: err }));
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   GET /:car_id
 // @desc    View a specific car
 // @access  Public
 router.get('/:car_id', (req, res) => {
-  const car_id = parseInt(req.params.car_id, 10);
-  if (car_id < 1) {
-    return res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
+  const { car_id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(car_id)) {
+    res.status(404).json({ status: 404, error: 'Invalid Car Id' });
   }
-  if (Number.isNaN(car_id)) {
-    return res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
-  }
-  Car.findByPk(car_id).then((car) => {
+  Car.findById(car_id).then((car) => {
     if (!car) {
-      return res.status(404).json({ status: 404, no_car: 'Car not found' });
+      res.status(404).json({ status: 404, error: 'Car not found' });
     }
     res.status(200).json({ status: 200, car });
-  }).catch((err) => console.log(err));
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   GET /status/available
 // @desc    View all unsold cars
 // @access  Public
 router.get('/status/available', (req, res) => {
-  Car.findAll({ where: { status: 'available' } })
+  Car.find({ status: 'available' })
     .then((cars) => {
       if (cars.length < 1) {
-        return res.status(404).json({ error: 'No available cars found' });
+        return res.status(404).json({ status: 404, error: 'No available cars found' });
       }
       res.status(200).json({
         status: 200,
-        found_cars: cars,
+        available_cars: cars,
       });
-    }).catch((err) => console.log(err));
+    }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   GET /state/new
 // @desc    View all new unsold cars
 // @access  Public
 router.get('/state/new', (req, res) => {
-  Car.findAll({ where: { state: 'new', status: 'available' } })
+  Car.find({ state: 'new', status: 'available' })
     .then((cars) => {
       if (cars.length < 1) {
-        return res.status(404).json({ error: 'No new cars found' });
+        return res.status(404).json({ status: 404, error: 'No new cars found' });
       }
       res.status(200).json({
         status: 200,
         new_cars: cars,
       });
-    }).catch((err) => console.log(err));
+    }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   GET /state/used
 // @desc    View all used unsold cars
 // @access  Public
 router.get('/state/used', (req, res) => {
-  Car.findAll({ where: { state: 'used', status: 'available' } })
+  Car.find({ state: 'used', status: 'available' })
     .then((cars) => {
       if (cars.length < 1) {
-        return res.status(404).json({ error: 'No used cars found' });
+        return res.status(404).json({ status: 404, error: 'No used cars found' });
       }
       res.status(200).json({
         status: 200,
         used_cars: cars,
       });
-    }).catch((err) => console.log(err));
+    }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   GET /search/q
@@ -180,109 +172,82 @@ router.get('/state/used', (req, res) => {
 // @access  Public
 router.get('/search/q', (req, res) => {
   let { manufacturer, state, body_type, min_price, max_price } = req.query;
-  manufacturer = (manufacturer === undefined) ? null : manufacturer.toLowerCase();
-  state = (state === undefined) ? null : state.toLowerCase();
-  body_type = (body_type === undefined) ? null : body_type.toLowerCase();
-  min_price = (min_price === undefined) ? null : min_price;
-  max_price = (max_price === undefined) ? null : max_price;
-  Car.findAll({
-    where: {
-      status: 'available',
-      [Op.or]: [
-        { manufacturer },
-        { state },
-        { body_type },
-        {
-          price:
-          {
-            [Op.gte]: min_price,
-            [Op.lte]: max_price,
-          },
-        },
-      ],
-    },
+  manufacturer = (manufacturer === undefined) ? '' : manufacturer.toLowerCase();
+  state = (state === undefined) ? '' : state.toLowerCase();
+  body_type = (body_type === undefined) ? '' : body_type.toLowerCase();
+  min_price = (min_price === undefined) ? 0 : min_price;
+  max_price = (max_price === undefined) ? 999999 : max_price;
+  console.log(manufacturer, state, body_type, min_price, max_price);
+  Car.find({
+    status: 'available',
+    manufacturer,
+    state,
+    $or: [{ body_type }, { price: { $gte: min_price, $lte: max_price } }],
   }).then((cars) => {
     if (cars.length < 1) {
-      return res.status(404).json({ no_result: 'No cars found' });
+      return res.status(404).json({ error: 'No cars found' });
     }
     res.status(200).json({
       status: 200,
       result: cars,
     });
-  }).catch((err) => console.log(err));
+  }).catch((err) => res.status(400).json({ error: err }));
 });
 
 // @route   DELETE /:car_id
 // @desc    Delete a specific car
 // @access  Private
 router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const car_id = parseInt(req.params.car_id, 10);
+  const { car_id } = req.params;
   const current_user_id = req.user.id;
-  if (car_id < 1) {
-    return res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
+  if (!mongoose.Types.ObjectId.isValid(car_id)) {
+    res.status(404).json({ status: 404, error: 'Invalid car Id' });
   }
-  if (Number.isNaN(car_id)) {
-    return res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
-  }
-  Car.findByPk(car_id).then((car) => {
+  Car.findById(car_id).then((car) => {
+    const car_img_id = car.image[0].public_ID;
     if (!car) {
       return res.status(404).json({ status: 404, no_car: 'Car not found' });
     }
-    if (current_user_id === car.owner) {
-      Car.destroy({ where: { id: car_id } }).then((rowDeleted) => {
-        if (rowDeleted !== 1) {
-          return res.status(400).json({ status: 400, delete_error: 'Unable to delete car' });
-        }
-        res.status(200).json(
-          {
+    if (current_user_id === car.owner_id) {
+      Car.deleteOne({ _id: car_id }).then(() => {
+        cloudinary.v2.uploader.destroy(car_img_id, () => {
+          res.status(200).json({
             status: 200,
-            delete_success: 'Car deleted successfully',
-            deleted_car: car,
-          },
-        );
-      });
+            message: 'Car deleted successfuly',
+          });
+        });
+      }).catch((err) => res.status(400).json({ status: 400, error: err }));
     } else {
       res.status(401).json({ status: 401, not_allowed: 'You are not authorized to delete this car' });
     }
-  }).catch((err) => console.log(err));
-});
-
-// // @route   GET /test
-// // @desc    View all posted car ads
-// // @access  Public
-router.get('/test/new', (req, res) => {
-  res.send('Test route');
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // // @route   GET /car
 // // @desc    View all posted car ads
 // // @access  Public
 router.get('/', (req, res) => {
-  Car.findAll({ limit: 6, order: [['createdAt', 'DESC']] }).then((cars) => {
+  Car.find().then((cars) => {
     if (cars.length > 0) {
-      res.status(200).json({
+      return res.status(200).json({
         status: 200,
         cars,
       });
-    } else {
-      return res.status(404).json({ status: 404, info: 'There are currently no ads.' });
     }
-  }).catch((err) => console.log(err));
+    res.status(404).json({ status: 404, error: 'There are currently no ads.' });
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   GET /seller/:seller_id
 // @desc    View all posted car ads by a seller
 // @access  Public
 router.get('/seller/:seller_id', (req, res) => {
-  const owner_id = parseInt(req.params.seller_id, 10);
-  if (owner_id < 1) {
-    return res.status(400).json({ status: 400, user_id_err: 'Invalid user Id' });
+  const { seller_id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(seller_id)) {
+    res.status(404).json({ status: 404, error: 'Invalid user Id' });
   }
-  if (Number.isNaN(owner_id)) {
-    return res.status(404).json({ status: 404, invalid_user_id: 'User does not exist' });
-  }
-  Car.findAll({ where: { owner: owner_id } }).then((cars) => {
-    User.findByPk(owner_id).then((user) => {
+  Car.find({ owner_id: seller_id }).then((cars) => {
+    User.findById(seller_id).then((user) => {
       if (cars.length > 0) {
         return res.status(200).json(
           {
@@ -292,28 +257,27 @@ router.get('/seller/:seller_id', (req, res) => {
           },
         );
       }
-      res.status(404).json({ status: 404, no_seller_ads: 'No ads found for this user' });
+      res.status(404).json({ status: 404, error: 'No ads found for this user' });
     });
-  }).catch((err) => console.log(err));
+  }).catch((err) => res.status(404).json({ status: 404, error: err }));
 });
 
 // @route   GET /user/user_id
 // @desc    View all posted car ads by a user
 // @access  Private
-router.get('/user/my_cars', passport.authenticate('jwt', { session: false }), (req, res) => {
+router.get('/user/user_cars', passport.authenticate('jwt', { session: false }), (req, res) => {
   const current_user_id = req.user.id;
-  Car.findAll({ where: { owner: current_user_id } }).then((cars) => {
+  Car.find({ owner_id: current_user_id }).then((cars) => {
     if (cars.length > 0) {
       return res.status(200).json(
         {
           status: 200,
-          my_cars: cars,
+          user_cars: cars,
         },
       );
     }
-    res.status(404).json({ status: 404, no_user_ads: 'You do not have any listed cars' });
-  }).catch((err) => console.log(err));
+    res.status(404).json({ status: 404, error: 'You do not have any listed cars' });
+  }).catch((err) => res.status(404).json({ status: 404, error: err }));
 });
-
 
 module.exports = router;

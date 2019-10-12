@@ -15,7 +15,7 @@ require('dotenv').config();
 require('./config/dbconn');
 
 // Body-parser middleware
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // Route Files
@@ -37,7 +37,6 @@ app.use('/api/v1/order', order);
 app.get('/', (req, res) => {
   res.send('This is the Automart API');
 });
-
 
 const port = process.env.PORT || 7000;
 app.listen(port, () => console.log(`Server runing on port ${port}`));

@@ -1,54 +1,54 @@
-const Sequelize = require('sequelize');
+/* eslint-disable eol-last */
+/* eslint-disable comma-dangle */
+const mongoose = require('mongoose');
 
-const db = require('../config/dbconn');
-
-const User = db.define('user', {
-  id: {
-    type: Sequelize.INTEGER,
-    primaryKey: true,
-    unique: true,
-    autoIncrement: true,
+const userSchema = new mongoose.Schema({
+  first_name: {
+    type: String,
+    required: true
   },
-  firstName: {
-    type: Sequelize.STRING,
-    AllowNull: false,
+  last_name: {
+    type: String,
+    required: true
   },
-  lastName: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-  },
-  username: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-  },
-  profilePic: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-  },
+  profile_pic: [
+    {
+      public_ID: {
+        type: String,
+        required: true
+      },
+      public_url: {
+        type: String,
+        required: true
+      },
+    }
+  ],
   phone: {
-    type: Sequelize.STRING,
-    AllowNull: false,
+    type: String,
+    required: true
   },
   address: {
-    type: Sequelize.STRING,
-    AllowNull: false,
+    type: String,
+    required: true
   },
   email: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-    unique: true,
+    type: String,
+    required: true,
+    unique: true
   },
   password: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-    validate: {
-      len: { args: 8 },
-    },
+    type: String,
+    required: true
+  },
+  joined: {
+    type: Date,
+    default: Date.now
   },
   is_admin: {
-    type: Sequelize.BOOLEAN,
-    defaultValue: false,
-  },
+    type: Boolean,
+    default: false
+  }
 });
 
+const User = mongoose.model('User', userSchema);
 module.exports = User;

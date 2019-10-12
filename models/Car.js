@@ -1,59 +1,62 @@
-const Sequelize = require('sequelize');
+/* eslint-disable eol-last */
+/* eslint-disable comma-dangle */
+const mongoose = require('mongoose');
 
-const db = require('../config/dbconn');
-
-const Car = db.define('car', {
-  id: {
-    type: Sequelize.INTEGER,
-    primaryKey: true,
-    unique: true,
-    autoIncrement: true,
-  },
-  owner: {
-    type: Sequelize.INTEGER,
-    AllowNull: false,
-    references: {
-      model: 'users',
-      key: 'id',
-    },
+const carSchema = new mongoose.Schema({
+  owner_id: {
+    type: String,
+    required: true
   },
   name: {
-    type: Sequelize.STRING,
-    AllowNull: false,
+    type: String,
+    required: true
   },
   description: {
-    type: Sequelize.STRING,
-    AllowNull: false,
+    type: String,
+    required: true
   },
   state: {
-    type: Sequelize.STRING,
-    AllowNull: false,
+    type: String,
+    required: true
   },
   status: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-    defaultValue: 'available',
+    type: String,
+    required: true,
+    default: 'available'
   },
   price: {
-    type: Sequelize.FLOAT,
-    AllowNull: false,
+    type: Number,
+    required: true
   },
   manufacturer: {
-    type: Sequelize.STRING,
-    AllowNull: false,
+    type: String,
+    required: true
   },
   model: {
-    type: Sequelize.STRING,
-    AllowNull: false,
+    type: String,
+    required: true
   },
   body_type: {
-    type: Sequelize.STRING,
-    AllowNull: false,
+    type: String,
+    required: true
   },
-  image: {
-    type: Sequelize.STRING,
-    AllowNull: false,
-  },
+  image: [
+    {
+      public_ID: {
+        type: String,
+        required: true
+      },
+      public_url: {
+        type: String,
+        required: true
+      },
+    }
+  ],
+  date: {
+    type: Date,
+    default: Date.now
+  }
 });
 
+const Car = mongoose.model('Car', carSchema);
 module.exports = Car;

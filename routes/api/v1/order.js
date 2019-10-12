@@ -4,8 +4,10 @@
 /* eslint-disable camelcase */
 const express = require('express');
 const passport = require('passport');
+const mongoose = require('mongoose');
 
 const Order = require('../../../models/Order');
+const Car = require('../../../models/Car');
 
 const router = express.Router();
 
@@ -13,88 +15,90 @@ const router = express.Router();
 // @desc    Create a purchase order
 // @access  Private
 router.post('/', passport.authenticate('jwt', { session: false }), (req, res) => {
-  let { amount, status } = req.body;
-  amount = parseFloat(amount);
-  const buyer = req.user.id;
+  let { amount } = req.body;
+  const buyer_id = req.user.id;
+  const buyer_email = req.user.email;
   const { car_id } = req.query;
   if (!amount) {
     return res.status(400).json({ status: 400, no_amount: 'Please enter offer amount' });
   }
-  if (isNaN(amount)) {
-    return res.status(400).json({ status: 400, invalid_amount: 'Please enter a valid amount' });
+  if (!mongoose.Types.ObjectId.isValid(car_id)) {
+    res.status(404).json({ status: 404, error: 'Invalid car Id' });
   }
-  Order.create({ buyer, car_id, amount, status }).then((order) => {
-    if (order) {
-      return res.status(200).json(
-        {
-          status: 200,
-          success: 'Your offer have been sent successfully',
-        },
-      );
+  Car.findById(car_id).then((car) => {
+    if (!car) {
+      return res.status(404).json({ status: 404, error: 'Car does not exist' });
     }
-    res.status(400).json({ status: 400, failed_order: 'Your could not be placed' });
-  });
+    const newOrder = new Order({ buyer_id, buyer_email, amount, car_id });
+    newOrder.save().then((order) => res.status(200).json({
+      status: 200,
+      message: 'Your order have been sent',
+      details: {
+        order_id: order.id,
+        amount,
+        order_status: order.status,
+      },
+    })).catch(() => res.status(400).json({ status: 400, error: 'Unable to place an order at the moment' }));
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   POST /:order_id/status/accepted
 // @desc    Mark an offer as accepted
 // @access  Private
 router.patch('/:order_id/status', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const order_id = parseInt(req.params.order_id, 10);
-  if (order_id < 1) {
-    return res.status(400).json({ status: 400, order_id_err: 'Invalid order Id' });
+  const { order_id } = req.params;
+  const current_user_id = req.user.id;
+  if (!mongoose.Types.ObjectId.isValid(order_id)) {
+    return res.status(404).json({ status: 404, error: 'Order Id is invalid' });
   }
-  if (Number.isNaN(order_id)) {
-    return res.status(404).json({ status: 404, invalid_order_id: 'Please enter a valid order id' });
-  }
-  Order.findByPk(order_id).then((order) => {
+  Order.findById(order_id).then((order) => {
     if (!order) {
-      return res.status(404).json({ status: 404, no_order: 'order does not exist' });
+      return res.status(404).json({ status: 404, error: 'Order not found' });
     }
-    Order.update(
-      { status: 'accepted' },
-      { where: { id: order_id }, returning: true },
-    ).then((newOrder) => {
-      if (newOrder[0] === 0) {
-        return res.status(400).json({ status: 400, update_error: 'Unable to update Order status.' });
-      }
-      res.status(200).json({ status: 200, updated_order: newOrder });
-    });
-  });
+    if (current_user_id === order.buyer_id && order.status === 'pending') {
+      Order.updateOne(
+        { _id: order_id },
+        { $set: { status: 'accepted' } },
+      ).then(() => res.status(200).json({
+        status: 200,
+        message: 'Order have been accepted',
+      })).catch((err) => res.status(400).json({ status: 400, error: err }));
+    } else {
+      res.status(401).json({ status: 401, error: 'Not Allowed' });
+    }
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   PATCH /:order_id/price
-// @desc    Update a purchase order price
+// @desc    Update a purchase order amount
 // @access  Private
-router.patch('/:order_id/price', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const order_id = parseInt(req.params.order_id, 10);
+router.patch('/:order_id/amount', passport.authenticate('jwt', { session: false }), (req, res) => {
+  const { order_id } = req.params;
   const current_user_id = req.user.id;
   let { new_amount } = req.body;
-  if (order_id < 1) {
-    return res.status(404).json({ status: 404, order_id_err: 'Invalid order Id' });
+  new_amount = parseFloat(new_amount);
+  if (!mongoose.Types.ObjectId.isValid(order_id)) {
+    return res.status(404).json({ status: 404, error: 'Order Id is invalid' });
   }
-  if (Number.isNaN(order_id)) {
-    return res.status(404).json({ status: 404, invalid_order_id: 'Please enter a valid order id' });
-  }
-  Order.findByPk(order_id).then((order) => {
+  Order.findById(order_id).then((order) => {
     if (!order) {
-      return res.status(404).json({ status: 404, no_order: 'order does not exist' });
+      return res.status(404).json({ status: 404, error: 'Order not found' });
     }
     if (order.status === 'accepted') {
-      return res.status(401).json({ status: 401, info: 'Offer already accepted, cannot update amount' });
+      return res.status(401).json({ status: 401, error: 'Offer already accepted, cannot update amount' });
     }
-    if (order.status === 'pending' && order.buyer === current_user_id) {
-      Order.update(
-        { amount: new_amount },
-        { where: { id: order_id }, returning: true },
-      ).then((newOrder) => {
-        if (newOrder[0] === 0) {
-          return res.status(400).json({ status: 400, update_err: 'Unable to update Order amount.' });
-        }
-        res.status(200).json({ status: 200, updated_order: newOrder });
-      });
+    if (current_user_id === order.buyer_id && order.status === 'pending') {
+      Order.updateOne(
+        { _id: order_id },
+        { $set: { amount: new_amount } },
+      ).then(() => res.status(200).json({
+        status: 200,
+        message: 'Order amount have been updated',
+      })).catch((err) => res.status(400).json({ status: 400, error: err }));
+    } else {
+      res.status(401).json({ status: 401, error: 'Not Allowed' });
     }
-  });
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 // @route   GET /user
@@ -102,7 +106,7 @@ router.patch('/:order_id/price', passport.authenticate('jwt', { session: false }
 // @access  Private
 router.get('/user', passport.authenticate('jwt', { session: false }), (req, res) => {
   const current_user_id = req.user.id;
-  Order.findAll({ where: { buyer: current_user_id } }).then((orders) => {
+  Order.find({ buyer_id: current_user_id }).then((orders) => {
     if (orders.length > 0) {
       return res.status(200).json(
         {
@@ -111,7 +115,7 @@ router.get('/user', passport.authenticate('jwt', { session: false }), (req, res)
         },
       );
     }
-    res.status(404).json({ status: 404, no_user_orders: 'You do not have any orders' });
+    res.status(404).json({ status: 404, error: 'You do not have any orders' });
   });
 });
 
@@ -119,55 +123,52 @@ router.get('/user', passport.authenticate('jwt', { session: false }), (req, res)
 // @desc    View all pending purchase offers for a specific car
 // @access  Public
 router.get('/car/:car_id', (req, res) => {
-  const car_id = parseInt(req.params.car_id, 10);
-  if (car_id < 1) {
-    return res.status(400).json({ status: 400, car_id_err: 'Invalid car Id' });
+  const { car_id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(car_id)) {
+    return res.status(404).json({ status: 404, error: 'Car Id is invalid' });
   }
-  if (Number.isNaN(car_id)) {
-    return res.status(404).json({ status: 404, invalid_car_id: 'Car not found, car id must be a positive number' });
-  }
-  Order.findAll({ where: { car_id, status: 'pending' } }).then((orders) => {
-    if (orders.length > 0) {
-      return res.status(200).json(
-        {
-          status: 200,
-          car_orders: orders,
-        },
-      );
+  Car.findById(car_id).then((car) => {
+    if (!car) {
+      return res.status(404).json({ status: 404, error: 'Car does not exist' });
     }
-    res.status(404).json({ status: 404, no_car_orders: 'This car does not have any orders' });
-  }).catch((err) => console.log(err));
+    Order.find({ car_id, status: 'pending' }).then((orders) => {
+      if (orders.length > 0) {
+        return res.status(200).json(
+          {
+            status: 200,
+            car_orders: orders,
+          },
+        );
+      }
+      res.status(404).json({ status: 404, no_car_orders: 'This car does not have any pending orders' });
+    }).catch((err) => res.status(400).json({ status: 400, error: err }));
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
-
 
 // @route   DELETE /:order_id
 // @desc    Mark an offer as rejected
 // @access  Private
 router.delete('/:order_id', passport.authenticate('jwt', { session: false }), (req, res) => {
-  const order_id = parseInt(req.params.order_id, 10);
-  if (order_id < 1) {
-    return res.status(400).json({ status: 400, order_id_err: 'Invalid order Id' });
+  const { order_id } = req.params;
+  const current_user_id = req.user.id;
+  if (!mongoose.Types.ObjectId.isValid(order_id)) {
+    res.status(404).json({ status: 404, error: 'Invalid order Id' });
   }
-  if (Number.isNaN(order_id)) {
-    return res.status(404).json({ status: 404, invalid_order_id: 'Please enter a valid order id' });
-  }
-  Order.findByPk(order_id).then((order) => {
+  Order.findById(order_id).then((order) => {
     if (!order) {
-      return res.status(404).json({ status: 404, no_order: 'order does not exist' });
+      return res.status(404).json({ status: 404, no_order: 'Order does not exist' });
     }
-    Order.destroy({ where: { id: order_id } }).then((rowDeleted) => {
-      if (rowDeleted !== 1) {
-        return res.status(400).json({ status: 400, order_delete_err: 'Unable to delete order' });
-      }
-      res.status(200).json(
-        {
+    if (current_user_id === order.buyer_id && order.status === 'pending') {
+      Order.deleteOne({ _id: order_id }).then(() => {
+        res.status(200).json({
           status: 200,
-          reject_msg: 'Order rejected',
-          rejected_order: order,
-        },
-      );
-    });
-  }).catch((err) => console.log(err));
+          message: 'Order deleted successfuly',
+        });
+      }).catch((err) => res.status(400).json({ status: 400, error: err }));
+    } else {
+      res.status(401).json({ status: 401, not_allowed: 'You are not allowed to delete this order' });
+    }
+  }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
 module.exports = router;
