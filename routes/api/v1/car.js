@@ -115,23 +115,7 @@ router.get('/:car_id', (req, res) => {
     if (!car) {
       res.status(404).json({ status: 404, error: 'Car not found' });
     }
-    res.status(200).json({
-      status: 200,
-      car: {
-        _id: car.id,
-        owner_id: car.owner_id,
-        name: car.name,
-        description: car.description,
-        state: car.state,
-        status: car.status,
-        price: car.price,
-        manufacturer: car.manufacturer,
-        model: car.model,
-        body_type: car.body_type,
-        image: car.image[0].public_url,
-        date: car.date,
-      },
-    });
+    res.status(200).json({ status: 200, car });
   }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
@@ -146,20 +130,7 @@ router.get('/status/available', (req, res) => {
       }
       res.status(200).json({
         status: 200,
-        available_cars: {
-          _id: cars.id,
-          owner_id: cars.owner_id,
-          name: cars.name,
-          description: cars.description,
-          state: cars.state,
-          status: cars.status,
-          price: cars.price,
-          manufacturer: cars.manufacturer,
-          model: cars.model,
-          body_type: cars.body_type,
-          image: cars.image[0].public_url,
-          date: cars.date,
-        },
+        available_cars: cars,
       });
     }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
@@ -175,20 +146,7 @@ router.get('/state/new', (req, res) => {
       }
       res.status(200).json({
         status: 200,
-        new_cars: {
-          _id: cars.id,
-          owner_id: cars.owner_id,
-          name: cars.name,
-          description: cars.description,
-          state: cars.state,
-          status: cars.status,
-          price: cars.price,
-          manufacturer: cars.manufacturer,
-          model: cars.model,
-          body_type: cars.body_type,
-          image: cars.image[0].public_url,
-          date: cars.date,
-        },
+        new_cars: cars,
       });
     }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
@@ -204,20 +162,7 @@ router.get('/state/used', (req, res) => {
       }
       res.status(200).json({
         status: 200,
-        used_cars: {
-          _id: cars.id,
-          owner_id: cars.owner_id,
-          name: cars.name,
-          description: cars.description,
-          state: cars.state,
-          status: cars.status,
-          price: cars.price,
-          manufacturer: cars.manufacturer,
-          model: cars.model,
-          body_type: cars.body_type,
-          image: cars.image[0].public_url,
-          date: cars.date,
-        },
+        used_cars: cars,
       });
     }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
@@ -243,20 +188,7 @@ router.get('/search/q', (req, res) => {
     }
     res.status(200).json({
       status: 200,
-      result: {
-        _id: cars.id,
-        owner_id: cars.owner_id,
-        name: cars.name,
-        description: cars.description,
-        state: cars.state,
-        status: cars.status,
-        price: cars.price,
-        manufacturer: cars.manufacturer,
-        model: cars.model,
-        body_type: cars.body_type,
-        image: cars.image[0].public_url,
-        date: cars.date,
-      },
+      result: cars,
     });
   }).catch((err) => res.status(400).json({ error: err }));
 });
@@ -298,20 +230,7 @@ router.get('/', (req, res) => {
     if (cars.length > 0) {
       return res.status(200).json({
         status: 200,
-        cars: {
-          _id: cars.id,
-          owner_id: cars.owner_id,
-          name: cars.name,
-          description: cars.description,
-          state: cars.state,
-          status: cars.status,
-          price: cars.price,
-          manufacturer: cars.manufacturer,
-          model: cars.model,
-          body_type: cars.body_type,
-          image: cars.image[0].public_url,
-          date: cars.date,
-        },
+        cars,
       });
     }
     res.status(404).json({ status: 404, error: 'There are currently no ads.' });
@@ -333,20 +252,7 @@ router.get('/seller/:seller_id', (req, res) => {
           {
             status: 200,
             seller_email: user.email,
-            seller_cars: {
-              _id: cars.id,
-              owner_id: cars.owner_id,
-              name: cars.name,
-              description: cars.description,
-              state: cars.state,
-              status: cars.status,
-              price: cars.price,
-              manufacturer: cars.manufacturer,
-              model: cars.model,
-              body_type: cars.body_type,
-              image: cars.image[0].public_url,
-              date: cars.date,
-            },
+            seller_ads: cars,
           },
         );
       }
@@ -365,20 +271,7 @@ router.get('/user/user_cars', passport.authenticate('jwt', { session: false }), 
       return res.status(200).json(
         {
           status: 200,
-          user_cars: {
-            _id: cars.id,
-            owner_id: cars.owner_id,
-            name: cars.name,
-            description: cars.description,
-            state: cars.state,
-            status: cars.status,
-            price: cars.price,
-            manufacturer: cars.manufacturer,
-            model: cars.model,
-            body_type: cars.body_type,
-            image: cars.image[0].public_url,
-            date: cars.date,
-          },
+          user_cars: cars,
         },
       );
     }
