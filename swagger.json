@@ -5,8 +5,6 @@
       "description": "This is the documentation for Auto Mart API, an online marketplace where users can buy and sell cars of diverse makes.",
       "termsOfService": "http://swagger.io/terms/",
       "contact": {
-         "name": "Gharoro Pureheart",
-         "url": "https://github.com/Gharoro",
          "email": "gharoropureheart@gmail.com"
       },
       "license": {
