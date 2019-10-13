@@ -44,7 +44,11 @@
                "properties": {
                   "items": {
                      "type": "array",
-                     "items": {}
+                     "items": {
+                        "_id": "string",
+                        "public_id": "string",
+                        "public_url": "string"
+                     }
                   }
                },
                "description": "The user profile picture details containing the image url and id."
@@ -119,7 +123,11 @@
                "properties": {
                   "items": {
                      "type": "array",
-                     "items": {}
+                     "items": {
+                        "_id": "string",
+                        "public_id": "string",
+                        "public_url": "string"
+                     }
                   }
                },
                "description": "The car image details containing the image url and id."
@@ -271,7 +279,7 @@
                "auth"
             ],
             "consumes": [
-               "application/x-www-form-urlencoded"
+               "x-www-form-urlencoded"
             ],
             "parameters": [
                {
