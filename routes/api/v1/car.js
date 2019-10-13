@@ -184,7 +184,7 @@ router.get('/search/q', (req, res) => {
     $or: [{ body_type }, { price: { $gte: min_price, $lte: max_price } }],
   }).then((cars) => {
     if (cars.length < 1) {
-      return res.status(404).json({ error: 'No cars found' });
+      return res.status(404).json({ status: 404, error: 'No cars found' });
     }
     res.status(200).json({
       status: 200,

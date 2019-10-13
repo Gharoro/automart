@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
 
 const app = express();
 
@@ -34,8 +36,16 @@ app.use('/api/v1/profile', profile);
 app.use('/api/v1/car', car);
 app.use('/api/v1/order', order);
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 app.get('/', (req, res) => {
-  res.send('This is the Automart API');
+  res.json({
+    greetings: 'Hello there!',
+    message: 'This is the AutoMart API landing page',
+    author: 'Gharoro Pureheart',
+    github: 'https://github.com/Gharoro/automart-api',
+    documentation: 'https://auto-mart-api.herokuapp.com/api-docs',
+  });
 });
 
 const port = process.env.PORT || 7000;

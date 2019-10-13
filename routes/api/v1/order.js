@@ -146,7 +146,7 @@ router.get('/car/:car_id', (req, res) => {
 });
 
 // @route   DELETE /:order_id
-// @desc    Mark an offer as rejected
+// @desc    Deletes a pending order
 // @access  Private
 router.delete('/:order_id', passport.authenticate('jwt', { session: false }), (req, res) => {
   const { order_id } = req.params;
