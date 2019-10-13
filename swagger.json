@@ -3,6 +3,16 @@
    "info": {
       "title": "AutoMart API Documentation",
       "description": "This is the documentation for Auto Mart API, an online marketplace where users can buy and sell cars of diverse makes.",
+      "termsOfService": "http://swagger.io/terms/",
+      "contact": {
+         "name": "Gharoro Pureheart",
+         "url": "https://github.com/Gharoro",
+         "email": "gharoropureheart@gmail.com"
+      },
+      "license": {
+         "name": "Apache 2.0",
+         "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+      },
       "version": "1.0.0"
    },
    "host": "auto-mart-api.herokuapp.com",
@@ -279,8 +289,7 @@
                "auth"
             ],
             "consumes": [
-               "application/x-www-form-urlencoded",
-               "multipart/form-data"
+               "application/x-www-form-urlencoded"
             ],
             "parameters": [
                {
