@@ -279,7 +279,8 @@
                "auth"
             ],
             "consumes": [
-               "x-www-form-urlencoded"
+               "application/x-www-form-urlencoded",
+               "multipart/form-data"
             ],
             "parameters": [
                {
