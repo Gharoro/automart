@@ -4,7 +4,8 @@ const mongoose = require('mongoose');
 if (process.env.NODE_ENV === 'development') {
   mongoose.connect(process.env.DEV_MONGO_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: false
   });
 } else {
   mongoose.connect(process.env.PROD_MONGO_URI, {

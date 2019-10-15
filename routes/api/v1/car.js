@@ -112,10 +112,24 @@ router.get('/:car_id', (req, res) => {
     res.status(404).json({ status: 404, error: 'Invalid Car Id' });
   }
   Car.findById(car_id).then((car) => {
-    if (!car) {
-      res.status(404).json({ status: 404, error: 'Car not found' });
-    }
-    res.status(200).json({ status: 200, car });
+    const id = car.owner_id;
+    User.findById(id).then((user) => {
+      const seller_first_name = user.first_name;
+      const seller_last_name = user.last_name;
+      const member_since = user.joined;
+      const pic_url = user.profile_pic[0].public_url;
+      if (!car) {
+        res.status(404).json({ status: 404, error: 'Car not found' });
+      }
+      res.status(200).json({
+        status: 200,
+        seller_first_name,
+        seller_last_name,
+        member_since,
+        pic_url,
+        car,
+      });
+    }).catch((err) => res.status(400).json({ status: 400, error: err }));
   }).catch((err) => res.status(400).json({ status: 400, error: err }));
 });
 
