@@ -5,6 +5,9 @@
 const express = require('express');
 const passport = require('passport');
 const mongoose = require('mongoose');
+const multer = require('multer');
+
+const data = multer();
 
 const Order = require('../../../models/Order');
 const Car = require('../../../models/Car');
@@ -14,7 +17,7 @@ const router = express.Router();
 // @route   POST /order
 // @desc    Create a purchase order
 // @access  Private
-router.post('/', passport.authenticate('jwt', { session: false }), (req, res) => {
+router.post('/', data.none(), passport.authenticate('jwt', { session: false }), (req, res) => {
   let { amount } = req.body;
   const buyer_id = req.user.id;
   const buyer_email = req.user.email;
@@ -72,7 +75,7 @@ router.patch('/:order_id/status', passport.authenticate('jwt', { session: false 
 // @route   PATCH /:order_id/price
 // @desc    Update a purchase order amount
 // @access  Private
-router.patch('/:order_id/amount', passport.authenticate('jwt', { session: false }), (req, res) => {
+router.patch('/:order_id/amount', data.none(), passport.authenticate('jwt', { session: false }), (req, res) => {
   const { order_id } = req.params;
   const current_user_id = req.user.id;
   let { new_amount } = req.body;

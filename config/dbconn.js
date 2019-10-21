@@ -1,21 +1,41 @@
+/* eslint-disable consistent-return */
 /* eslint-disable comma-dangle */
 const mongoose = require('mongoose');
 
-if (process.env.NODE_ENV === 'development') {
-  mongoose.connect(process.env.DEV_MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false
-  });
-} else {
-  mongoose.connect(process.env.PROD_MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  });
+function connect() {
+  if (process.env.NODE_ENV === 'development') {
+    return new Promise((resolve, reject) => {
+      mongoose.connect(process.env.DEV_MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true
+      }).then((res, err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+      mongoose.connection
+        .once('open', () => console.log('Connected to database...'))
+        .on('error', (error) => console.log('Error connecting to database!', error));
+    });
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return new Promise((resolve, reject) => {
+      mongoose.connect(process.env.PROD_MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true
+      }).then((res, err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+  }
 }
 
-mongoose.connection
-  .once('open', () => console.log('Connected to mongo database...'))
-  .on('error', (err) => {
-    console.log('Error connecting to database!', err);
-  });
+function close() {
+  return mongoose.disconnect();
+}
+
+module.exports = { connect, close };

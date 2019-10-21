@@ -287,28 +287,20 @@
                "auth"
             ],
             "consumes": [
-               "application/x-www-form-urlencoded"
+               "multipart/form-data"
             ],
             "parameters": [
                {
-                  "in": "body",
-                  "name": "User Login",
-                  "description": "User login details.",
-                  "schema": {
-                     "type": "object",
-                     "required": [
-                        "email",
-                        "password"
-                     ],
-                     "properties": {
-                        "email": {
-                           "type": "string"
-                        },
-                        "password": {
-                           "type": "string"
-                        }
-                     }
-                  }
+                  "in": "formData",
+                  "name": "email",
+                  "type": "string",
+                  "required": true
+               },
+               {
+                  "in": "formData",
+                  "name": "password",
+                  "type": "string",
+                  "required": true
                }
             ],
             "produces": [
@@ -703,7 +695,7 @@
                "car"
             ],
             "consumes": [
-               "application/x-www-form-urlencoded"
+               "multipart/form-data"
             ],
             "parameters": [
                {
@@ -714,20 +706,10 @@
                   "required": true
                },
                {
-                  "in": "body",
-                  "name": "Update car price",
-                  "description": "Enter the new price for the car.",
-                  "schema": {
-                     "type": "object",
-                     "required": [
-                        "new_price"
-                     ],
-                     "properties": {
-                        "new_price": {
-                           "type": "number"
-                        }
-                     }
-                  }
+                  "in": "formData",
+                  "name": "new_price",
+                  "type": "number",
+                  "required": true
                }
             ],
             "produces": [
@@ -834,7 +816,7 @@
                "order"
             ],
             "consumes": [
-               "application/x-www-form-urlencoded"
+               "multipart/form-data"
             ],
             "parameters": [
                {
@@ -845,20 +827,10 @@
                   "required": true
                },
                {
-                  "in": "body",
-                  "name": "New Order",
-                  "description": "Enter order amount.",
-                  "schema": {
-                     "type": "object",
-                     "required": [
-                        "amount"
-                     ],
-                     "properties": {
-                        "amount": {
-                           "type": "number"
-                        }
-                     }
-                  }
+                  "in": "formData",
+                  "name": "amount",
+                  "type": "number",
+                  "required": true
                }
             ],
             "produces": [
@@ -916,7 +888,7 @@
                "order"
             ],
             "consumes": [
-               "application/x-www-form-urlencoded"
+               "multipart/form-data"
             ],
             "parameters": [
                {
@@ -927,20 +899,10 @@
                   "required": true
                },
                {
-                  "in": "body",
-                  "name": "Update order amount",
-                  "description": "Enter the new order amount.",
-                  "schema": {
-                     "type": "object",
-                     "required": [
-                        "new_amount"
-                     ],
-                     "properties": {
-                        "new_amount": {
-                           "type": "number"
-                        }
-                     }
-                  }
+                  "in": "formData",
+                  "name": "new_amount",
+                  "type": "number",
+                  "required": true
                }
             ],
             "produces": [

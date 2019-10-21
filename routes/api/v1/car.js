@@ -5,7 +5,9 @@ const express = require('express');
 const passport = require('passport');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary');
+const multer = require('multer');
 
+const data = multer();
 const Car = require('../../../models/Car');
 const User = require('../../../models/User');
 const parser = require('../../../config/carsUploadConfig');
@@ -78,7 +80,7 @@ router.patch('/:id/status', passport.authenticate('jwt', { session: false }), (r
 // @route   PATCH /:car_id/price
 // @desc    Update the price of a car
 // @access  Private
-router.patch('/:id/price', passport.authenticate('jwt', { session: false }), (req, res) => {
+router.patch('/:id/price', data.none(), passport.authenticate('jwt', { session: false }), (req, res) => {
   const car_id = req.params.id;
   const current_user_id = req.user.id;
   let { new_price } = req.body;

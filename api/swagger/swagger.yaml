@@ -1,0 +1,655 @@
+swagger: "2.0"
+info:
+  title: AutoMart API Documentation
+  description: This is the documentation for Auto Mart API, an online marketplace where users can buy and sell cars of diverse makes.
+  version: 1.0.0
+host: auto-mart-api.herokuapp.com
+basePath: /api/v1
+schemes:
+  - https
+tags:
+  - name: auth
+    description: All endpoints related to user registration and login
+  - name: car
+    description: All endpoints related to car 
+  - name: order
+    description: All endpoints related to order
+    
+definitions:
+  User:
+    type: object
+    properties:
+      _id:
+        type: string
+        description: The user ID.
+      first_name:
+        type: string
+        description: The user first name.
+      last_name:
+        type: string
+        description: The user last name.
+      profile_pic:
+        properties:
+          items:
+            type: array
+            items: {}
+        description: The user profile picture details containing the image url and id.
+      phone:
+        type: string
+        description: The user phone number.
+      address:
+        type: string
+        description: The user address.
+      email:
+        type: string
+        description: The user email.
+      password:
+        type: string
+        description: The user password.
+      joined:
+        type: string
+        format: date-time
+        description: The user registration date.
+  Car:
+    type: object
+    properties:
+      _id:
+        type: string
+        description: The car ID.
+      owner_id:
+        type: string
+        description: The seller ID.
+      name:
+        type: string
+        description: The car name.
+      description:
+        type: string
+        description: The car description.
+      state:
+        type: string
+        description: The state of the car (new or used).
+      status:
+        type: string
+        description: The status of the car (available or unavailable).
+      price:
+        type: number
+        description: The price of the car.
+      manufacturer:
+        type: string
+        description: The makers of the car.
+      model:
+        type: string
+        description: The car model.
+      body_type:
+        type: string
+        description: The car body type.
+      image:
+        properties:
+          items:
+            type: array
+            items: {}
+        description: The car image details containing the image url and id.
+      date:
+        type: string
+        format: date-time
+        description: The listing date of the car.
+        
+  Order:
+    type: object
+    properties:
+      _id:
+        type: string
+        description: The order ID.
+      buyer_id:
+        type: string
+        description: The ID of the buyer.
+      buyer_email:
+        type: string
+        description: The email of the buyer.
+      car_id:
+        type: string
+        description: The ID of the car.
+      anount:
+        type: number
+        description: The order amount.
+      status:
+        type: string
+        description: The order status.
+      date:
+        type: string
+        format: date-time
+        description: The order creation date.
+        
+securityDefinitions:
+   BearerAuth:
+     type: apiKey
+     in: header
+     name: Authorization
+
+responses:
+  UnauthorizedError:
+    description: API token is missing or invalid. Please login.
+    headers:
+      Authorization:
+        type: string
+    
+paths:
+  /auth/signup:
+    post:
+      description: Registers a new user.
+      tags:
+        - auth
+      consumes:
+         - multipart/form-data
+      parameters:
+        - in: formData
+          name: first_name
+          type: string
+          required: true
+          description: User first name
+        - in: formData
+          name: last_name
+          type: string
+          required: true
+          description: User last name
+        - in: formData
+          name: profile_pic
+          type: file
+          required: true
+          description: User profile picture.
+        - in: formData
+          name: phone
+          type: string
+          required: true
+          description: User phone number
+        - in: formData
+          name: address
+          type: string
+          required: true
+          description: User address.
+        - in: formData
+          name: email
+          type: string
+          required: true
+          description: User email.
+        - in: formData
+          name: password
+          type: string
+          required: true
+          description: User password.
+        - in: formData
+          name: confirmPass
+          type: string
+          required: true
+          description: Retype password for confirmation.
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/User'
+            
+  /auth/signin:
+    post:
+      description: Login a user.
+      tags:
+        - auth
+      consumes:
+         - application/x-www-form-urlencoded
+      parameters:
+        - in: body
+          name: User Login
+          description: User login details.
+          schema:
+            type: object
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/User'
+            
+  /auth/delete_user/{user_id}/:
+    delete:
+      security:
+        - BearerAuth: []
+      description: Deletes a user.
+      tags:
+        - auth
+      parameters:
+        - name: user_id
+          in: path
+          description: '5da25a1d0fa5bf00171f96d2'
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          
+  /car:
+    get:
+      description: Returns a list of car ads.
+      tags:
+        - car
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Car'
+          
+  /car/{car_id}:
+    get:
+      description: Returns a specific car matching the id.
+      tags:
+        - car
+      parameters:
+        - name: car_id
+          in: path
+          description: '5da1b7fc6c649900174252ea'
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Car'
+          
+  /car/status/available:
+    get:
+      description: Returns a list of all 'available' car ads.
+      tags:
+        - car
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Car'
+  
+  /car/state/new:
+    get:
+      description: Returns a list of all 'new' car ads.
+      tags:
+        - car
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Car'
+          
+  /car/state/used:
+    get:
+      description: Returns a list of all 'used' car ads.
+      tags:
+        - car
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Car'
+          
+  /car/seller/{seller_id}:
+    get:
+      description: Returns a list of car ads beloging to a specific seller.
+      tags:
+        - car
+      parameters:
+        - name: seller_id
+          in: path
+          description: '5da1b78a6c649900174252e8'
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Car'
+
+  /car/user/user_cars:
+    get:
+      security:
+        - BearerAuth: []
+      description: Returns a list of car ads belonging.
+      tags:
+        - car
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Car'
+  
+  /car/search/q:
+    get:
+      description: Seearch for car ads.
+      tags:
+        - car
+      parameters:
+        - in: query
+          name: manufacturer
+          description: Car manufacturer
+          type: string
+          required: true
+        - in: query
+          name: state
+          description: New or used 
+          type: string
+          required: true
+        - in: query
+          name: body_type
+          description: Convertible, suv, etc
+          type: string
+          required: false
+        - in: query
+          name: min_price
+          description: Minimum price for car 
+          type: number
+          required: false
+        - in: query
+          name: max_price
+          description: Maximum price for car 
+          type: number
+          required: false
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Car'
+
+  /car/:
+    post:
+      security:
+        - BearerAuth: []
+      description: Create a new car ad.
+      tags:
+        - car
+      consumes:
+         - multipart/form-data
+      parameters:
+        - in: formData
+          name: name
+          type: string
+          required: true
+          description: Car name
+        - in: formData
+          name: description
+          type: string
+          required: true
+          description: Car description
+        - in: formData
+          name: state
+          type: string
+          required: true
+          description: Car state (new or used)
+        - in: formData
+          name: status
+          type: string
+          required: true
+          description: Car status(available or unavailable).
+        - in: formData
+          name: price
+          type: number
+          required: true
+          description: Car price.
+        - in: formData
+          name: manufacturer
+          type: string
+          required: true
+          description: Car manufacturer.
+        - in: formData
+          name: model
+          type: string
+          required: true
+          description: Car model.
+        - in: formData
+          name: body_type
+          type: string
+          required: true
+          description: Car body type.
+        - in: formData
+          name: image
+          type: file
+          required: true
+          description: Car image.
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Car'
+        401:
+          $ref: '#/responses/UnauthorizedError'
+          
+  /car/{id}/status:
+    patch:
+      security:
+        - BearerAuth: []
+      description: Marks a car as sold.
+      tags:
+        - car
+      parameters:
+        - name: id
+          in: path
+          description: Car Id to update e.g, '5da25a1d0fa5bf00171f96d2'
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          
+  /car/{id}/price:
+    patch:
+      security:
+        - BearerAuth: []
+      description: Updates the price of car.
+      tags:
+        - car
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: id
+          in: path
+          description: '5da25a1d0fa5bf00171f96d2'
+          type: string
+          required: true
+        - in: body
+          name: Update car price
+          description: Enter the new price for the car.
+          schema:
+            type: object
+            required:
+              - new_price
+            properties:
+              new_price:
+                type: number
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          
+  /car/{car_id}/:
+    delete:
+      security:
+        - BearerAuth: []
+      description: Deletes a car.
+      tags:
+        - car
+      parameters:
+        - name: car_id
+          in: path
+          description: '5da25a1d0fa5bf00171f96d2'
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          
+  /order/car/{car_id}:
+    get:
+      description: Returns all pending orders for a specific car.
+      tags:
+        - order
+      parameters:
+        - name: car_id
+          in: path
+          description: '5da1b78a6c649900174252e8'
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Order'
+            
+  /order/user:
+    get:
+      security:
+        - BearerAuth: []
+      description: Returns all orders made by currently logged in user.
+      tags:
+        - order
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Order'
+            
+  /order:
+    post:
+      security:
+        - BearerAuth: []
+      description: Creates a new order for a car.
+      tags:
+        - order
+      consumes:
+         - application/x-www-form-urlencoded
+      parameters:
+        - in: query
+          name: car_id
+          description: Car Id e.g, '5da1b78a6c649900174252e8'
+          type: string
+          required: true
+        - in: body
+          name: New Order
+          description: Enter order amount.
+          schema:
+            type: object
+            required:
+              - amount
+            properties:
+              amount:
+                type: number
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/Order'
+          
+  /order/{order_id}/status:
+    patch:
+      security:
+        - BearerAuth: []
+      description: Marks an order/offer as accepted.
+      tags:
+        - order
+      parameters:
+        - name: order_id
+          in: path
+          description: Order Id to accept e.g, '5da25a1d0fa5bf00171f96d2'
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          
+  /order/{order_id}/amount:
+    patch:
+      security:
+        - BearerAuth: []
+      description: Updates the order amountr.
+      tags:
+        - order
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - name: order_id
+          in: path
+          description: '5da25a1d0fa5bf00171f96d2'
+          type: string
+          required: true
+        - in: body
+          name: Update order amount
+          description: Enter the new order amount.
+          schema:
+            type: object
+            required:
+              - new_amount
+            properties:
+              new_amount:
+                type: number
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+
+  /order/{order_id}/:
+    delete:
+      security:
+        - BearerAuth: []
+      description: Deletes a pending order.
+      tags:
+        - order
+      parameters:
+        - name: order_id
+          in: path
+          description: '5da25a1d0fa5bf00171f96d2'
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+
+      
