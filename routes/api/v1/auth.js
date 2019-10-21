@@ -22,7 +22,7 @@ const router = express.Router();
 // @access  Public
 router.post('/signup', parser.single('profile_pic'), (req, res) => {
   let { first_name, last_name, phone, address, email, password, confirmPass } = req.body;
-  // let profile_pic = req.file;
+  let profile_pic = req.file;
   User.findOne({ email }).then((user) => {
     if (user) {
       return res.status(400).json({ status: 400, email_exist: 'Email already exist, please login' });
@@ -37,16 +37,16 @@ router.post('/signup', parser.single('profile_pic'), (req, res) => {
     if (password !== confirmPass) {
       return res.status(400).json({ status: 400, password_mis_match: 'Passwords do not match' });
     }
-    // if (!profile_pic) {
-    //   return res.status(400).json({ status: 400, error: 'Please upload a picture' });
-    // }
-    // if (profile_pic.size > 2000000) {
-    //   return res.status(400).json({ status: 400, picture_size: 'Please upload a picture less than 2mb' });
-    // }
-    // profile_pic = {
-    //   public_ID: profile_pic.public_id,
-    //   public_url: profile_pic.url,
-    // };
+    if (!profile_pic) {
+      return res.status(400).json({ status: 400, error: 'Please upload a picture' });
+    }
+    if (profile_pic.size > 2000000) {
+      return res.status(400).json({ status: 400, picture_size: 'Please upload a picture less than 2mb' });
+    }
+    profile_pic = {
+      public_ID: profile_pic.public_id,
+      public_url: profile_pic.url,
+    };
     const newUser = new User({
       first_name,
       last_name,
