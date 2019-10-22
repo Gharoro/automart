@@ -50,6 +50,7 @@ router.post('/signup', parser.single('profile_pic'), (req, res) => {
     const newUser = new User({
       first_name,
       last_name,
+      profile_pic,
       phone,
       address,
       email,

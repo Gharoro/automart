@@ -14,9 +14,7 @@ app.use(cors());
 require('dotenv').config();
 
 // Database connection
-const db = require('./config/dbconn');
-
-db.connect();
+require('./config/dbconn');
 
 // Body-parser middleware
 app.use(bodyParser.urlencoded({ extended: true }));

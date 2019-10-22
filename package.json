@@ -4,10 +4,10 @@
   "description": "An online marketplace for automobiles of diverse makes, model or body type. Users can buy and sell cars from trusted dealerships or private suppliers.",
   "main": "app.js",
   "scripts": {
-    "test": "mocha",
     "start": "node app.js",
     "server": "nodemon app.js",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Gharoro Pureheart",
   "license": "ISC",
@@ -29,12 +29,9 @@
     "swagger-ui-express": "^4.1.2"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "chai-http": "^4.3.0",
     "eslint": "^6.4.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-import": "^2.18.2",
-    "mocha": "^6.2.2",
     "nodemon": "^1.19.3"
   },
   "engines": {
