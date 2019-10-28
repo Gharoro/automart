@@ -345,6 +345,11 @@
       "/profile": {
          "get": {
             "description": "Returns a logged in user profile details.",
+            "security": [
+               {
+                  "BearerAuth": []
+               }
+            ],
             "tags": [
                "profile"
             ],
