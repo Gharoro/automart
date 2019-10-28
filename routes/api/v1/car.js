@@ -26,13 +26,13 @@ router.post('/', parser.single('image'), passport.authenticate('jwt', { session:
   let image = req.file;
   const owner_id = req.user.id;
   if (!name || !description || !state || !price || !manufacturer || !model || !body_type) {
-    return res.status(400).json({ status: 400, empty_car_fields: 'Please fill all fields' });
+    return res.status(400).json({ status: 400, error: 'Please fill all fields' });
   }
   if (!image) {
-    return res.status(400).json({ status: 400, no_img: 'Please upload an image for your car' });
+    return res.status(400).json({ status: 400, error: 'Please upload an image for your car' });
   }
   if (image.size > 5000000) {
-    return res.status(400).json({ status: 400, pic_size_error: 'Please upload a picture less than 5mb' });
+    return res.status(400).json({ status: 400, error: 'Please upload a picture less than 5mb' });
   }
   image = {
     public_ID: image.public_id,
@@ -43,10 +43,11 @@ router.post('/', parser.single('image'), passport.authenticate('jwt', { session:
   });
   newCar.save().then((car) => res.status(200).json({
     status: 200,
-    new_car: car,
-  })).catch((err) => res.status(400).json({
+    message: 'Car listed',
+    car,
+  })).catch(() => res.status(400).json({
     status: 400,
-    error: err,
+    error: 'Unable to add car',
   }));
 });
 
@@ -72,9 +73,9 @@ router.patch('/:id/status', passport.authenticate('jwt', { session: false }), (r
       ).then(() => res.status(200).json({
         status: 200,
         message: 'Car updated successfuly',
-      })).catch((err) => res.status(400).json({ status: 400, error: err }));
+      })).catch(() => res.status(400).json({ status: 400, error: 'Unable to update car status' }));
     }
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'Unable to process request' }));
 });
 
 // @route   PATCH /:car_id/price
@@ -101,8 +102,8 @@ router.patch('/:id/price', data.none(), passport.authenticate('jwt', { session: 
     ).then(() => res.status(200).json({
       status: 200,
       message: 'Car price updated successfuly',
-    })).catch((err) => res.status(400).json({ status: 400, error: err }));
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+    })).catch(() => res.status(400).json({ status: 400, error: 'Unable to update car price' }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   GET /:car_id
@@ -131,8 +132,8 @@ router.get('/:car_id', (req, res) => {
         pic_url,
         car,
       });
-    }).catch((err) => res.status(400).json({ status: 400, error: err }));
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+    }).catch(() => res.status(400).json({ status: 400, error: 'Cannot fetch car at the moment' }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   GET /status/available
@@ -148,7 +149,7 @@ router.get('/status/available', (req, res) => {
         status: 200,
         available_cars: cars,
       });
-    }).catch((err) => res.status(400).json({ status: 400, error: err }));
+    }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   GET /state/new
@@ -164,7 +165,7 @@ router.get('/state/new', (req, res) => {
         status: 200,
         new_cars: cars,
       });
-    }).catch((err) => res.status(400).json({ status: 400, error: err }));
+    }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   GET /state/used
@@ -180,7 +181,7 @@ router.get('/state/used', (req, res) => {
         status: 200,
         used_cars: cars,
       });
-    }).catch((err) => res.status(400).json({ status: 400, error: err }));
+    }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   GET /search/q
@@ -206,7 +207,7 @@ router.get('/search/q', (req, res) => {
       status: 200,
       result: cars,
     });
-  }).catch((err) => res.status(400).json({ error: err }));
+  }).catch(() => res.status(400).json({ error: 'An error occured' }));
 });
 
 // @route   DELETE /:car_id
@@ -221,7 +222,7 @@ router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req
   Car.findById(car_id).then((car) => {
     const car_img_id = car.image[0].public_ID;
     if (!car) {
-      return res.status(404).json({ status: 404, no_car: 'Car not found' });
+      return res.status(404).json({ status: 404, error: 'Car not found' });
     }
     if (current_user_id === car.owner_id) {
       Car.deleteOne({ _id: car_id }).then(() => {
@@ -233,9 +234,9 @@ router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req
         });
       }).catch((err) => res.status(400).json({ status: 400, error: err }));
     } else {
-      res.status(401).json({ status: 401, not_allowed: 'You are not authorized to delete this car' });
+      res.status(401).json({ status: 401, error: 'You are not authorized to delete this car' });
     }
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // // @route   GET /car
@@ -250,7 +251,7 @@ router.get('/', (req, res) => {
       });
     }
     res.status(404).json({ status: 404, error: 'There are currently no ads.' });
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   GET /seller/:seller_id
@@ -274,7 +275,7 @@ router.get('/seller/:seller_id', (req, res) => {
       }
       res.status(404).json({ status: 404, error: 'No ads found for this user' });
     });
-  }).catch((err) => res.status(404).json({ status: 404, error: err }));
+  }).catch(() => res.status(404).json({ status: 404, error: 'An error occured' }));
 });
 
 // @route   GET /user/user_id
@@ -292,7 +293,7 @@ router.get('/user/user_cars', passport.authenticate('jwt', { session: false }), 
       );
     }
     res.status(404).json({ status: 404, error: 'You do not have any listed cars' });
-  }).catch((err) => res.status(404).json({ status: 404, error: err }));
+  }).catch(() => res.status(404).json({ status: 404, error: 'An error occured' }));
 });
 
 module.exports = router;

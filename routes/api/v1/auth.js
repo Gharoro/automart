@@ -25,23 +25,23 @@ router.post('/signup', parser.single('profile_pic'), (req, res) => {
   let profile_pic = req.file;
   User.findOne({ email }).then((user) => {
     if (user) {
-      return res.status(400).json({ status: 400, email_exist: 'Email already exist, please login' });
+      return res.status(400).json({ status: 400, error: 'Email already exist, please login' });
     }
     if (!first_name || !last_name || !phone || !address
       || !email || !password || !confirmPass) {
-      return res.status(400).json({ status: 400, empty_fields: 'Please fill all fields' });
+      return res.status(400).json({ status: 400, error: 'Please fill all fields' });
     }
     if (password.length < 8) {
-      return res.status(400).json({ status: 400, password_length: 'Password must be more than 8 characters' });
+      return res.status(400).json({ status: 400, error: 'Password must be more than 8 characters' });
     }
     if (password !== confirmPass) {
-      return res.status(400).json({ status: 400, password_mis_match: 'Passwords do not match' });
+      return res.status(400).json({ status: 400, error: 'Passwords do not match' });
     }
     if (!profile_pic) {
       return res.status(400).json({ status: 400, error: 'Please upload a picture' });
     }
     if (profile_pic.size > 2000000) {
-      return res.status(400).json({ status: 400, picture_size: 'Please upload a picture less than 2mb' });
+      return res.status(400).json({ status: 400, error: 'Please upload a picture less than 2mb' });
     }
     profile_pic = {
       public_ID: profile_pic.public_id,
@@ -63,10 +63,11 @@ router.post('/signup', parser.single('profile_pic'), (req, res) => {
         newUser.save()
           .then((user) => res.status(200).json({
             status: 200,
-            new_user: user,
-          })).catch((err) => res.status(400).json({
+            message: 'Account created successfuly',
+            user,
+          })).catch(() => res.status(400).json({
             status: 400,
-            error: err,
+            error: 'An error occured',
           }));
       });
     });
@@ -83,7 +84,7 @@ router.post('/signin', auth.none(), (req, res) => {
   }
   User.findOne({ email }).then((user) => {
     if (!user) {
-      return res.status(404).json({ status: 404, email_not_found: 'Email does not exist!' });
+      return res.status(404).json({ status: 404, error: 'Email does not exist!' });
     }
     bcrypt.compare(password, user.password).then((isMatch) => {
       if (isMatch) {
@@ -91,11 +92,12 @@ router.post('/signin', auth.none(), (req, res) => {
         jwt.sign(payload, process.env.SECRET_OR_KEY, { expiresIn: 21600000 }, (err, token) => {
           res.status(200).json({
             status: 200,
+            message: 'Login successful',
             token: `Bearer ${token}`,
           });
         });
       } else {
-        return res.status(400).json({ status: 400, password_error: 'Password incorrect!' });
+        return res.status(400).json({ status: 400, error: 'Password incorrect!' });
       }
     });
   });

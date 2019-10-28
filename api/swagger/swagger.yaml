@@ -14,6 +14,8 @@ tags:
     description: All endpoints related to car 
   - name: order
     description: All endpoints related to order
+  - name: profile
+    description: Profile endpoints
     
 definitions:
   User:
@@ -92,8 +94,7 @@ definitions:
       date:
         type: string
         format: date-time
-        description: The listing date of the car.
-        
+        description: The listing date of the car.     
   Order:
     type: object
     properties:
@@ -237,6 +238,19 @@ paths:
       responses:
         200:
           description: OK
+
+  /profile:
+    get:
+      description: Returns a logged in user profile details.
+      tags:
+        - profile
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/User'
           
   /car:
     get:

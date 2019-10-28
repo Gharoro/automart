@@ -3,15 +3,7 @@
    "info": {
       "title": "AutoMart API Documentation",
       "description": "This is the documentation for Auto Mart API, an online marketplace where users can buy and sell cars of diverse makes.",
-      "termsOfService": "http://swagger.io/terms/",
-      "contact": {
-         "email": "gharoropureheart@gmail.com"
-      },
-      "license": {
-         "name": "Apache 2.0",
-         "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-      },
-      "version": "1.0.0"
+      "version": "1.1.0"
    },
    "host": "auto-mart-api.herokuapp.com",
    "basePath": "/api/v1",
@@ -30,6 +22,10 @@
       {
          "name": "order",
          "description": "All endpoints related to order"
+      },
+      {
+         "name": "profile",
+         "description": "Profile endpoints"
       }
    ],
    "definitions": {
@@ -52,11 +48,7 @@
                "properties": {
                   "items": {
                      "type": "array",
-                     "items": {
-                        "_id": "string",
-                        "public_id": "string",
-                        "public_url": "string"
-                     }
+                     "items": {}
                   }
                },
                "description": "The user profile picture details containing the image url and id."
@@ -131,11 +123,7 @@
                "properties": {
                   "items": {
                      "type": "array",
-                     "items": {
-                        "_id": "string",
-                        "public_id": "string",
-                        "public_url": "string"
-                     }
+                     "items": {}
                   }
                },
                "description": "The car image details containing the image url and id."
@@ -287,20 +275,28 @@
                "auth"
             ],
             "consumes": [
-               "multipart/form-data"
+               "application/x-www-form-urlencoded"
             ],
             "parameters": [
                {
-                  "in": "formData",
-                  "name": "email",
-                  "type": "string",
-                  "required": true
-               },
-               {
-                  "in": "formData",
-                  "name": "password",
-                  "type": "string",
-                  "required": true
+                  "in": "body",
+                  "name": "User Login",
+                  "description": "User login details.",
+                  "schema": {
+                     "type": "object",
+                     "required": [
+                        "email",
+                        "password"
+                     ],
+                     "properties": {
+                        "email": {
+                           "type": "string"
+                        },
+                        "password": {
+                           "type": "string"
+                        }
+                     }
+                  }
                }
             ],
             "produces": [
@@ -342,6 +338,25 @@
             "responses": {
                "200": {
                   "description": "OK"
+               }
+            }
+         }
+      },
+      "/profile": {
+         "get": {
+            "description": "Returns a logged in user profile details.",
+            "tags": [
+               "profile"
+            ],
+            "produces": [
+               "application/json"
+            ],
+            "responses": {
+               "200": {
+                  "description": "OK",
+                  "schema": {
+                     "$ref": "#/definitions/User"
+                  }
                }
             }
          }
@@ -695,7 +710,7 @@
                "car"
             ],
             "consumes": [
-               "multipart/form-data"
+               "application/x-www-form-urlencoded"
             ],
             "parameters": [
                {
@@ -706,10 +721,20 @@
                   "required": true
                },
                {
-                  "in": "formData",
-                  "name": "new_price",
-                  "type": "number",
-                  "required": true
+                  "in": "body",
+                  "name": "Update car price",
+                  "description": "Enter the new price for the car.",
+                  "schema": {
+                     "type": "object",
+                     "required": [
+                        "new_price"
+                     ],
+                     "properties": {
+                        "new_price": {
+                           "type": "number"
+                        }
+                     }
+                  }
                }
             ],
             "produces": [
@@ -816,7 +841,7 @@
                "order"
             ],
             "consumes": [
-               "multipart/form-data"
+               "application/x-www-form-urlencoded"
             ],
             "parameters": [
                {
@@ -827,10 +852,20 @@
                   "required": true
                },
                {
-                  "in": "formData",
-                  "name": "amount",
-                  "type": "number",
-                  "required": true
+                  "in": "body",
+                  "name": "New Order",
+                  "description": "Enter order amount.",
+                  "schema": {
+                     "type": "object",
+                     "required": [
+                        "amount"
+                     ],
+                     "properties": {
+                        "amount": {
+                           "type": "number"
+                        }
+                     }
+                  }
                }
             ],
             "produces": [
@@ -888,7 +923,7 @@
                "order"
             ],
             "consumes": [
-               "multipart/form-data"
+               "application/x-www-form-urlencoded"
             ],
             "parameters": [
                {
@@ -899,10 +934,20 @@
                   "required": true
                },
                {
-                  "in": "formData",
-                  "name": "new_amount",
-                  "type": "number",
-                  "required": true
+                  "in": "body",
+                  "name": "Update order amount",
+                  "description": "Enter the new order amount.",
+                  "schema": {
+                     "type": "object",
+                     "required": [
+                        "new_amount"
+                     ],
+                     "properties": {
+                        "new_amount": {
+                           "type": "number"
+                        }
+                     }
+                  }
                }
             ],
             "produces": [

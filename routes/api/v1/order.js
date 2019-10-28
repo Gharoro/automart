@@ -23,7 +23,7 @@ router.post('/', data.none(), passport.authenticate('jwt', { session: false }), 
   const buyer_email = req.user.email;
   const { car_id } = req.query;
   if (!amount) {
-    return res.status(400).json({ status: 400, no_amount: 'Please enter offer amount' });
+    return res.status(400).json({ status: 400, error: 'Please enter offer amount' });
   }
   if (!mongoose.Types.ObjectId.isValid(car_id)) {
     res.status(404).json({ status: 404, error: 'Invalid car Id' });
@@ -42,7 +42,7 @@ router.post('/', data.none(), passport.authenticate('jwt', { session: false }), 
         order_status: order.status,
       },
     })).catch(() => res.status(400).json({ status: 400, error: 'Unable to place an order at the moment' }));
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   POST /:order_id/status/accepted
@@ -65,11 +65,11 @@ router.patch('/:order_id/status', passport.authenticate('jwt', { session: false 
       ).then(() => res.status(200).json({
         status: 200,
         message: 'Order have been accepted',
-      })).catch((err) => res.status(400).json({ status: 400, error: err }));
+      })).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
     } else {
       res.status(401).json({ status: 401, error: 'Not Allowed' });
     }
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   PATCH /:order_id/price
@@ -97,11 +97,11 @@ router.patch('/:order_id/amount', data.none(), passport.authenticate('jwt', { se
       ).then(() => res.status(200).json({
         status: 200,
         message: 'Order amount have been updated',
-      })).catch((err) => res.status(400).json({ status: 400, error: err }));
+      })).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
     } else {
       res.status(401).json({ status: 401, error: 'Not Allowed' });
     }
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   GET /user
@@ -143,9 +143,9 @@ router.get('/car/:car_id', (req, res) => {
           },
         );
       }
-      res.status(404).json({ status: 404, no_car_orders: 'This car does not have any pending orders' });
-    }).catch((err) => res.status(400).json({ status: 400, error: err }));
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+      res.status(404).json({ status: 404, error: 'This car does not have any pending orders' });
+    }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 // @route   DELETE /:order_id
@@ -159,7 +159,7 @@ router.delete('/:order_id', passport.authenticate('jwt', { session: false }), (r
   }
   Order.findById(order_id).then((order) => {
     if (!order) {
-      return res.status(404).json({ status: 404, no_order: 'Order does not exist' });
+      return res.status(404).json({ status: 404, error: 'Order does not exist' });
     }
     if (current_user_id === order.buyer_id && order.status === 'pending') {
       Order.deleteOne({ _id: order_id }).then(() => {
@@ -167,11 +167,11 @@ router.delete('/:order_id', passport.authenticate('jwt', { session: false }), (r
           status: 200,
           message: 'Order deleted successfuly',
         });
-      }).catch((err) => res.status(400).json({ status: 400, error: err }));
+      }).catch(() => res.status(400).json({ status: 400, error: 'Unable to delete order' }));
     } else {
-      res.status(401).json({ status: 401, not_allowed: 'You are not allowed to delete this order' });
+      res.status(401).json({ status: 401, error: 'You are not allowed to delete this order' });
     }
-  }).catch((err) => res.status(400).json({ status: 400, error: err }));
+  }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 
 module.exports = router;
