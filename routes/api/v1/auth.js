@@ -28,7 +28,7 @@ router.post('/signup', parser.single('profile_pic'), (req, res) => {
       return res.status(400).json({ status: 400, error: 'Email already exist, please login' });
     }
     if (!first_name || !last_name || !phone || !address
-      || !email || !password || !confirmPass) {
+      || !email) {
       return res.status(400).json({ status: 400, error: 'Please fill all fields' });
     }
     if (password.length < 8) {

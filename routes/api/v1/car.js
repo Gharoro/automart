@@ -243,14 +243,54 @@ router.delete('/:car_id', passport.authenticate('jwt', { session: false }), (req
 // // @desc    View all posted car ads
 // // @access  Public
 router.get('/', (req, res) => {
-  Car.find().then((cars) => {
-    if (cars.length > 0) {
-      return res.status(200).json({
-        status: 200,
-        cars,
-      });
+  let page = parseInt(req.query.page, 10);
+  let limit = parseInt(req.query.limit, 10);
+  const query = {};
+  if (page < 0 || page === 0) {
+    return res.status(400).json({ status: 400, error: 'Invalid page number' });
+  }
+  if (limit > 6) {
+    return res.status(400).json({ status: 400, error: 'Maximum result limit is 6' });
+  }
+  page = (!page) ? 1 : page;
+  limit = (!limit) ? 3 : limit;
+  query.skip = limit * (page - 1);
+  query.limit = limit;
+  query.end = page * limit;
+  query.sort = { date: -1 };
+  Car.countDocuments({}, (err, totalCount) => {
+    if (err) {
+      return res.status(400).json({ status: 400, error: 'An unexpected error occured' });
     }
-    res.status(404).json({ status: 404, error: 'There are currently no ads.' });
+    const totalPages = Math.ceil(totalCount / limit);
+    Car.find().then((cars) => {
+      const paginate_links = {};
+      if (query.end < cars.length) {
+        paginate_links.next = {
+          page: page + 1,
+          limit,
+        };
+      }
+      if (query.skip > 0) {
+        paginate_links.prev = {
+          page: page - 1,
+          limit,
+        };
+      }
+      if (cars.length > 0) {
+        return res.status(200).json({
+          status: 200,
+          pagination: {
+            result: cars.length,
+            page_num: page,
+            total_pages: totalPages,
+          },
+          paginate_links,
+          cars,
+        });
+      }
+      res.status(404).json({ status: 404, error: 'There are currently no ads.' });
+    }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
   }).catch(() => res.status(400).json({ status: 400, error: 'An error occured' }));
 });
 

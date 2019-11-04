@@ -32,6 +32,9 @@ router.post('/', data.none(), passport.authenticate('jwt', { session: false }), 
     if (!car) {
       return res.status(404).json({ status: 404, error: 'Car does not exist' });
     }
+    if (buyer_id === car.owner_id) {
+      return res.status(400).json({ status: 400, error: 'You cannot place order for your own Ad' });
+    }
     const newOrder = new Order({ buyer_id, buyer_email, amount, car_id });
     newOrder.save().then((order) => res.status(200).json({
       status: 200,

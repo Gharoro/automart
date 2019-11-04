@@ -372,6 +372,22 @@
             "tags": [
                "car"
             ],
+            "parameters": [
+               {
+                 "name": "page",
+                 "in": "query",
+                 "description": "Page number to display e.g 2",
+                 "type": "number",
+                 "required": true
+               },
+               {
+                 "name": "limit",
+                 "in": "query",
+                 "description": "Total number of results to display. Default is 3, maximum is 6",
+                 "type": "number",
+                 "required": true
+               }
+             ],
             "produces": [
                "application/json"
             ],

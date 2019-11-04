@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const cors = require('cors');
+const responseTime = require('response-time')
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger.json');
 
@@ -9,6 +10,8 @@ const app = express();
 
 // Cors middleware
 app.use(cors());
+
+app.use(responseTime());
 
 // Environment variable middleware
 require('dotenv').config();
